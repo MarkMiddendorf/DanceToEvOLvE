@@ -6,7 +6,7 @@ st.set_page_config(page_title = "DanceToEvOLvE Dashboard", layout = "wide")
 st.header("💃 DanceToEvOLvE Dashboard")
 
 df = pd.read_excel(
-    io = '/Users/markmiddendorf/Desktop/INTL BUS/DanceToEvOLve/combined_output9.20.24.xlsx',
+    io = '/',
     engine = 'openpyxl',
     sheet_name = 'Combined',
     skiprows=0,
