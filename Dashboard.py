@@ -1,4 +1,3 @@
-pip install plotly_express
 
 import pandas as pd # type: ignore
 import streamlit as st # type: ignore
