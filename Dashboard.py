@@ -1,6 +1,6 @@
 import pandas as pd # type: ignore
-import plotly.express as px # type: ignore
 import streamlit as st # type: ignore
+import plotly.express as px # type: ignore
 
 st.set_page_config(page_title = "💃 DanceToEvOLvE Dashboard", layout = "wide")
 st.header("💃 DanceToEvOLvE Dashboard")
