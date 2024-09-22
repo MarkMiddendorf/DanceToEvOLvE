@@ -6,7 +6,7 @@ st.set_page_config(page_title = "DanceToEvOLvE Dashboard", layout = "wide")
 st.header("💃 DanceToEvOLvE Dashboard")
 
 df = pd.read_excel(
-    io = '/',
+    io = '/Users/markmiddendorf/Desktop/INTL BUS/DanceToEvOLve/combined_output9.20.24.xlsx',
     engine = 'openpyxl',
     sheet_name = 'Combined',
     skiprows=0,
@@ -14,18 +14,26 @@ df = pd.read_excel(
     nrows=1922,
 )
 
+# Example: Assuming 'Retention_Rate' values are strings with '%' at the end
+#df['Retention_Rate'] = df['Retention_Rate'].str.replace('%', '')  # Remove the '%' sign
+#df['Retention_Rate'] = pd.to_numeric(df['Retention_Rate'], errors='coerce')  # Convert to numeric
+
 # --- SideBar ----
 st.sidebar.header("Please Filter Here: ")
 grouptype = st.sidebar.multiselect(
     "Select the group:",
-    options=df["City"].dropna().unique(),
+    options=df["Group"].dropna().unique(),
     default=["Overall"]
 )
 
+# Unique cities excluding 'Overall'
+uniqueCities = df["City"].dropna().unique().tolist()
+citiesNoOverall = [city for city in uniqueCities if city != "Overall"]
+
 citySelect = st.sidebar.multiselect(
     "Select the City:",
-    options=df["City"].dropna().unique(),
-    default=["Overall"]
+    options=uniqueCities,  # Use the filtered cities
+    default=["Overall"] # Set the default based on the condition
 )
 
 locationSelect = st.sidebar.multiselect(
@@ -34,57 +42,90 @@ locationSelect = st.sidebar.multiselect(
     default=["Overall"]
 )
 
+# Unique values for Calculation_Type
+unique_calc_types = df["Calculation_Type"].dropna().unique()
+default_calc_type = ['School Year over School Year Retention'] if 'School Year over School Year Retention' in unique_calc_types else []
+
 calcType = st.sidebar.multiselect(
     "Select the Calculation Type:",
-    options=df["Calculation_Type"].dropna().unique(),
-    default=df["Calculation_Type"].dropna().unique()
+    options=unique_calc_types,
+    default=default_calc_type
 )
+
+# Unique values for Categories
+unique_categories = df["Category"].dropna().unique().tolist()
+default_categories = ['Chicago', 'Cleveland', 'San Diego']
+default_categories = [cat for cat in default_categories if cat in unique_categories]  # Only include if they exist
 
 category = st.sidebar.multiselect(
     "Select the Category:",
-    options=df["Category"].dropna().unique(),
-    default=["Reg", "Non Reg"]
+    options=unique_categories,
+    default=default_categories
 )
+
+# Unique values for Year_Start
+unique_start_years = df["Year_Start"].dropna().unique()
+default_start_year = ['2022-23 School Year'] if '2022-23 School Year' in unique_start_years else []
 
 startYear = st.sidebar.multiselect(
     "Select the Start Year:",
-    options=df["Year_Start"].dropna().unique(),
-    default=[df["Year_Start"].dropna().unique()[0]]  # Use the first available year
+    options=unique_start_years,
+    default=default_start_year
 )
+
+# Unique values for Year_End
+unique_end_years = df["Year_End"].dropna().unique()
+default_end_year = ['2023-24 School Year'] if '2023-24 School Year' in unique_end_years else []
 
 endYear = st.sidebar.multiselect(
     "Select the End Year:",
-    options=df["Year_End"].dropna().unique(),
-    default=[df["Year_End"].dropna().unique()[-1]]  # Use the last available year
+    options=unique_end_years,
+    default=default_end_year
 )
+
+# Unique values for Season_Start
+unique_start_seasons = df["Season_Start"].dropna().unique()
+default_start_season = ['SchoolYear/SchoolYear'] if 'SchoolYear/SchoolYear' in unique_start_seasons else []
 
 startSeason = st.sidebar.multiselect(
     "Select the Start Season:",
-    options=df["Season_Start"].dropna().unique(),
-    default=df["Season_Start"].dropna().unique()
+    options=unique_start_seasons,
+    default=default_start_season
 )
+
+# Unique values for Season_End
+unique_end_seasons = df["Season_End"].dropna().unique()
+default_end_season = ['SchoolYear/SchoolYear'] if 'SchoolYear/SchoolYear' in unique_end_seasons else []
 
 endSeason = st.sidebar.multiselect(
     "Select the End Season:",
-    options=df["Season_End"].dropna().unique(),
-    default=df["Season_End"].dropna().unique()
+    options=unique_end_seasons,
+    default=default_end_season
 )
+
+# Unique values for Session_Start
+unique_start_sessions = df["Session_Start"].dropna().unique()
+default_start_session = ['SchoolYear/SchoolYear'] if 'SchoolYear/SchoolYear' in unique_start_sessions else []
 
 startSession = st.sidebar.multiselect(
     "Select the Start Session:",
-    options=df["Session_Start"].dropna().unique(),
-    default=df["Session_Start"].dropna().unique()
+    options=unique_start_sessions,
+    default=default_start_session
 )
+
+# Unique values for Session_End
+unique_end_sessions = df["Session_End"].dropna().unique()
+default_end_session = ['SchoolYear/SchoolYear'] if 'SchoolYear/SchoolYear' in unique_end_sessions else []
 
 endSession = st.sidebar.multiselect(
     "Select the End Session:",
-    options=df["Session_End"].dropna().unique(),
-    default=df["Session_End"].dropna().unique()
+    options=unique_end_sessions,
+    default=default_end_session
 )
 
 # Selection based on sidebar filters
 df_selection = df.query(
-    "City in @citySelect & Calculation_Type in @calcType & Group in @grouptype & "
+    "City in @citySelect & Category in @category & Calculation_Type in @calcType & Group in @grouptype & "
     "Year_Start in @startYear & Year_End in @endYear & "
     "Season_Start in @startSeason & Season_End in @endSeason & "
     "Session_Start in @startSession & Session_End in @endSession"
@@ -103,10 +144,24 @@ session_start_value = 'SchoolYear/SchoolYear'
 session_end_value = 'SchoolYear/SchoolYear'
 categories = ['Chicago', 'Cleveland', 'San Diego']
 
-# Initialize city_dfs
-city_dfs = {}
+# Define the fixed query parameters for each city reg / nonreg
+group_value1 = 'City'
+city_value1 = ['Chicago', 'Cleveland', 'San Diego']
+location_value1 = 'GroupedByCity (use Category)'
+calculation_type_value1 = 'School Year over School Year Retention'
+year_start_value1 = '2022-23 School Year'
+year_end_value1 = '2023-24 School Year'
+season_start_value1 = 'SchoolYear/SchoolYear'
+season_end_value1 = 'SchoolYear/SchoolYear'
+session_start_value1 = 'SchoolYear/SchoolYear'
+session_end_value1 = 'SchoolYear/SchoolYear'
+categories1 = ['Reg', 'Non Reg']
 
-# Query for each category
+# Initialize city_dfs and city_category_dfs
+city_dfs = {}
+city_category_dfs = {category: {} for category in categories1}
+
+# Query for each category (Overall)
 for category in categories:
     query_string = (
         f"Group == '{group_value}' & "
@@ -122,7 +177,29 @@ for category in categories:
         f"Session_End == '{session_end_value}'"
     )
     
-    city_dfs[category] = df.query(query_string)[['Session_Start', 'Retention_Rate', 'Location', 'Category']]
+    # Query the DataFrame and store the result
+    city_dfs[category] = df.query(query_string)[['Year_Start', 'Year_End', 'Retention_Rate', 'Location', 'Category']]
+
+# Query for Reg/Non Reg
+for category in categories1:
+    for city in city_value1:
+        # Construct the query string
+        query_string1 = (
+            f"Group == '{group_value1}' & "
+            f"City == '{city}' & "
+            f"Location == '{location_value1}' & "
+            f"Calculation_Type == '{calculation_type_value1}' & "
+            f"Year_Start == '{year_start_value1}' & "
+            f"Year_End == '{year_end_value1}' & "
+            f"Season_Start == '{season_start_value1}' & "
+            f"Season_End == '{season_end_value1}' & "
+            f"Session_Start == '{session_start_value1}' & "
+            f"Session_End == '{session_end_value1}' & "
+            f"Category == '{category}'"
+        )
+
+        # Query the DataFrame and store the result
+        city_category_dfs[category][city] = df.query(query_string1)[['Year_Start', 'Year_End', 'Retention_Rate', 'Location', 'Category']]
 
 # Convert Retention_Rate to percentage format for all DataFrames
 def format_rate(value):
@@ -140,6 +217,10 @@ def format_retention_rate(df):
 for category in categories:
     city_dfs[category] = format_retention_rate(city_dfs[category])
 
+for category in categories1:
+    for city in city_value1:
+        city_category_dfs[category][city] = format_retention_rate(city_category_dfs[category][city])
+
 # Displaying KPIs with st.columns
 st.header("Retention Overview")
 
@@ -149,8 +230,13 @@ cols = st.columns(len(categories))
 for i, category in enumerate(categories):
     with cols[i]:
         st.subheader(category)
-        st.write(f"**Session Start:** {city_dfs[category].iloc[0]['Session_Start'] if not city_dfs[category].empty else 'N/A'}")
+        st.write(f"**Base Year:** {city_dfs[category].iloc[0]['Year_Start'] if not city_dfs[category].empty else 'N/A'}")
+        st.write(f"**Retention Year:** {city_dfs[category].iloc[0]['Year_End'] if not city_dfs[category].empty else 'N/A'}")
         st.write(f"**Retention Rate:** {city_dfs[category].iloc[0]['Retention_Rate'] if not city_dfs[category].empty else 'N/A'}")
+        
+        # Display Reg and Non Reg retention rates if available
+        st.write(f"**Retention Rate Reg:** {city_category_dfs['Reg'][category].iloc[0]['Retention_Rate'] if not city_category_dfs['Reg'][category].empty else 'N/A'}")
+        st.write(f"**Retention Rate Non Reg:** {city_category_dfs['Non Reg'][category].iloc[0]['Retention_Rate'] if not city_category_dfs['Non Reg'][category].empty else 'N/A'}")
 
 st.markdown("---")
 
@@ -161,7 +247,7 @@ if df_selection.empty:
     st.warning("No data available for the selected filters. Please adjust your filters.")
 else:
     df_selection["Retention_Rate"] = pd.to_numeric(df_selection["Retention_Rate"], errors='coerce')
-    df_selection["Year_Session"] = df_selection["Year_Start"].astype(str) + " - " + df_selection["Session_Start"]
+    df_selection["Year_Session"] = df_selection["Year_End"].astype(str) + " - " + df_selection["Session_End"]
     df_selection["Year_Session"] = pd.Categorical(df_selection["Year_Session"], ordered=True, 
                                                   categories=sorted(df_selection["Year_Session"].unique()))
     df_selection = df_selection.sort_values("Year_Session")
@@ -171,13 +257,13 @@ else:
         df_selection,
         x="Year_Session",
         y="Retention_Rate",
-        color="Group",
+        color="Category",
         markers=True,
         title="Retention Rate Over Time",
         labels={
             "Year_Session": "Year and Session",
             "Retention_Rate": "Retention Rate (%)",
-            "Group": "Group"
+            "Category": "Category"
         }
     )
 
@@ -185,7 +271,7 @@ else:
     fig.update_layout(
         xaxis_title="Year and Session",
         yaxis_title="Retention Rate (%)",
-        legend_title="Group",
+        legend_title="Category",
         template="plotly_white",
         hovermode="x"
     )
