@@ -1,7 +1,6 @@
 # Install setuptools, wheel, and ensure distutils is installed
 setuptools==68.0.0
 wheel
-setuptools-distutils
 
 # Add other required packages
 numpy==1.23.5
