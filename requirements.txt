@@ -2,3 +2,4 @@ pandas==2.2.3
 plotly==5.9.0
 st_gsheets_connection==0.1.0
 streamlit==1.38.0
+numpy==1.24.4
