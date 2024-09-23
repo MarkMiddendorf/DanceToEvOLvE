@@ -1,5 +1,5 @@
 # Install setuptools, wheel, and ensure distutils is installed
-setuptools>=65.5.0
+setuptools==68.0.0
 wheel
 setuptools-distutils
 
