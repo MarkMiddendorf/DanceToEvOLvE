@@ -1,22 +1,15 @@
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
 import streamlit as st # type: ignore
+from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title = "DanceToEvOLvE Dashboard", layout = "wide")
 st.header("💃 DanceToEvOLvE Dashboard")
 
-df = pd.read_excel(
-    io = '/Users/markmiddendorf/Desktop/INTL BUS/DanceToEvOLve/combined_output9.20.24.xlsx',
-    engine = 'openpyxl',
-    sheet_name = 'Combined',
-    skiprows=0,
-    usecols='A:L',
-    nrows=1922,
-)
+conn = st.connection("gsheets", type=GSheetsConnection)
 
-# Example: Assuming 'Retention_Rate' values are strings with '%' at the end
-#df['Retention_Rate'] = df['Retention_Rate'].str.replace('%', '')  # Remove the '%' sign
-#df['Retention_Rate'] = pd.to_numeric(df['Retention_Rate'], errors='coerce')  # Convert to numeric
+data = conn.read(worksheet="Sheet1", usecols =list(range(12)))
+df = data
 
 # --- SideBar ----
 st.sidebar.header("Please Filter Here: ")
