@@ -1,8 +1,12 @@
-# requirements.txt
-# Package versions
-setuptools==68.0.0
+# Install setuptools, wheel, and ensure distutils is installed
+setuptools>=65.5.0
+wheel
+setuptools-distutils
+
+# Add other required packages
+numpy==1.23.5
 pandas==2.0.1
 plotly==5.13.1
 streamlit==1.38.0
 st_gsheets_connection==0.1.0
-numpy==1.23.5
+
