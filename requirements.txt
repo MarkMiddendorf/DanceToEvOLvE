@@ -1,8 +1,4 @@
 # requirements.txt
-
-# Specify Python version indirectly
-python_version >= 3.9, <3.10
-
 # Package versions
 pandas==2.0.1
 plotly==5.13.1
