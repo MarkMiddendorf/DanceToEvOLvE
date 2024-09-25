@@ -205,6 +205,7 @@ else:
 
     # Ensure Year_Session is sorted without converting it to a categorical variable
     unique_sessions = sorted(df_selection["Year_Session"].dropna().unique())
+    df_selection["Year_End"] = df_selection["Year_End"].astype(str)
     df_selection["Year_Session"] = pd.Series(pd.Categorical(df_selection["Year_Session"], categories=unique_sessions, ordered=True)).astype(str)
 
 
