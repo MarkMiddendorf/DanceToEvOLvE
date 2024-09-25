@@ -212,20 +212,24 @@ else:
     # Sort the DataFrame by the Year_Session column to maintain chronological order
     df_selection = df_selection.sort_values("Year_Session")
 
-    # --- Dynamic Graph with Markers ---
+   # Combine City and Category into a new column for color differentiation
+    df_selection["City_Category"] = df_selection["City"] + " - " + df_selection["Category"]
+
+    # Create a dynamic graph with markers, using the combined City_Category column for colors
     fig = px.line(
         df_selection,
         x="Year_Session",
         y="Retention_Rate",
-        color="Category",
+        color="City_Category",  # Use the combined column for color
         markers=True,
         title="Retention Rate Over Time",
         labels={
             "Year_Session": "Year and Session",
             "Retention_Rate": "Retention Rate (%)",
-            "Category": "Category"
+            "City_Category": "City and Category"  # Update label accordingly
         }
     )
+
 
     # Customize the layout of the plot for improved readability and visual appeal
     fig.update_layout(
