@@ -4,8 +4,17 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import plotly.express as px
 import plotly.graph_objects as go  # Import Plotly graph objects
+from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(layout="wide")
+
+
+# Establish connection to Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+# Read data from the Google Sheets connection
+data = conn.read(worksheet="Data", usecols=list(range(18)))
+df = data
 
 # select all for filters
 def select_all_option_expander(label, options, sort_order='alphabetical'):
@@ -36,54 +45,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
-# Cache to remove error when filters are empty
-def load_google_sheet(sheet_url, sheet_name, toml_keyfile_name):
-    # Read the TOML keyfile
-    credentials = toml.load(toml_keyfile_name)
-    
-    # Extract necessary fields from the TOML file
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds_dict = {
-        "type": credentials["type"],
-        "project_id": credentials["project_id"],
-        "private_key_id": credentials["private_key_id"],
-        "private_key": credentials["private_key"],
-        "client_email": credentials["client_email"],
-        "client_id": credentials["client_id"],
-        "auth_uri": credentials["auth_uri"],
-        "token_uri": credentials["token_uri"],
-        "auth_provider_x509_cert_url": credentials["auth_provider_x509_cert_url"],
-        "client_x509_cert_url": credentials["client_x509_cert_url"]
-    }
-    
-    # Credentials to the account (using dictionary)
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-    
-    # Authorize sheet
-    client = gspread.authorize(creds)
-    
-    # Get instance of Spreadsheet
-    sheet = client.open_by_url(sheet_url)
-    
-    # Get the sheet by name
-    worksheet = sheet.worksheet(sheet_name)
-    data = worksheet.get_all_records()
-    
-    # Convert to DataFrame
-    df = pd.DataFrame(data)
-    
-    return df
-
-# MARK: here is link to sheets
-sheet_url = 'https://docs.google.com/spreadsheets/d/1nigC8X7S0L7wBsFOhIz8DpXiyNXXnqHxVEIHdzVWl9k/edit?usp=sharing'
-sheet_name = 'Data'
-
-# MARK: TOML file name for authentication
-toml_keyfile_name = 'credentials.toml'
-
-# Data
-df = load_google_sheet(sheet_url, sheet_name, toml_keyfile_name)
 
 
 def addSchoolYear(df):
