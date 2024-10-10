@@ -4,17 +4,40 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import plotly.express as px
 import plotly.graph_objects as go  # Import Plotly graph objects
-from streamlit_gsheets import GSheetsConnection
 
+# Set up Streamlit page config
 st.set_page_config(layout="wide")
 
+# Define the scope for accessing Google Sheets
+scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
+         "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
 
-# Establish connection to Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
+# Load credentials from Streamlit secrets
+creds_dict = {
+    "type": st.secrets["gsheets"]["type"],
+    "project_id": st.secrets["gsheets"]["project_id"],
+    "private_key_id": st.secrets["gsheets"]["private_key_id"],
+    "private_key": st.secrets["gsheets"]["private_key"].replace("\\n", "\n"),  # replace escaped newlines
+    "client_email": st.secrets["gsheets"]["client_email"],
+    "client_id": st.secrets["gsheets"]["client_id"],
+    "auth_uri": st.secrets["gsheets"]["auth_uri"],
+    "token_uri": st.secrets["gsheets"]["token_uri"],
+    "auth_provider_x509_cert_url": st.secrets["gsheets"]["auth_provider_x509_cert_url"],
+    "client_x509_cert_url": st.secrets["gsheets"]["client_x509_cert_url"]
+}
 
-# Read data from the Google Sheets connection
-data = conn.read(worksheet="Data", usecols=list(range(18)))
-df = data
+# Authorize the client using credentials
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+client = gspread.authorize(creds)
+
+# Open Google Sheet by name or URL
+sheet = client.open("DanceToEvolve_Data").worksheet("Data")
+
+# Get data from Google Sheet
+data = sheet.get_all_records()
+
+# Convert the data to a pandas DataFrame
+df = pd.DataFrame(data)
 
 # select all for filters
 def select_all_option_expander(label, options, sort_order='alphabetical'):
