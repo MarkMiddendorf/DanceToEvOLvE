@@ -31,7 +31,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
 # Open Google Sheet by name or URL
-sheet = client.open('https://docs.google.com/spreadsheets/d/1nigC8X7S0L7wBsFOhIz8DpXiyNXXnqHxVEIHdzVWl9k/edit?usp=sharing').worksheet("Data")
+sheet = client.open("DanceToEvolve_Data).worksheet("Data")
 
 # Get data from Google Sheet
 data = sheet.get_all_records()
