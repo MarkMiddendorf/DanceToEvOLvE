@@ -37,30 +37,54 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Cashe to remove error when filters are empty
-def load_google_sheet(sheet_url, sheet_name, json_keyfile_name):
+# Cache to remove error when filters are empty
+def load_google_sheet(sheet_url, sheet_name, toml_keyfile_name):
+    # Read the TOML keyfile
+    credentials = toml.load(toml_keyfile_name)
+    
+    # Extract necessary fields from the TOML file
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    # Credentials to the account
-    creds = ServiceAccountCredentials.from_json_keyfile_name(json_keyfile_name, scope)
+    creds_dict = {
+        "type": credentials["type"],
+        "project_id": credentials["project_id"],
+        "private_key_id": credentials["private_key_id"],
+        "private_key": credentials["private_key"],
+        "client_email": credentials["client_email"],
+        "client_id": credentials["client_id"],
+        "auth_uri": credentials["auth_uri"],
+        "token_uri": credentials["token_uri"],
+        "auth_provider_x509_cert_url": credentials["auth_provider_x509_cert_url"],
+        "client_x509_cert_url": credentials["client_x509_cert_url"]
+    }
+    
+    # Credentials to the account (using dictionary)
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    
     # Authorize sheet
     client = gspread.authorize(creds)
+    
     # Get instance of Spreadsheet
     sheet = client.open_by_url(sheet_url)
-    # Get the first sheet of the Spreadsheet
+    
+    # Get the sheet by name
     worksheet = sheet.worksheet(sheet_name)
     data = worksheet.get_all_records()
+    
     # Convert to DataFrame
     df = pd.DataFrame(data)
+    
     return df
 
 # MARK: here is link to sheets
 sheet_url = 'https://docs.google.com/spreadsheets/d/1nigC8X7S0L7wBsFOhIz8DpXiyNXXnqHxVEIHdzVWl9k/edit?usp=sharing'
 sheet_name = 'Data'
-# MARK: json file name for authentication
-json_keyfile_name = 'winter-clone-436904-v5-aee209d45b4f.json'
+
+# MARK: TOML file name for authentication
+toml_keyfile_name = 'credentials.toml'
 
 # Data
-df = load_google_sheet(sheet_url, sheet_name, json_keyfile_name)
+df = load_google_sheet(sheet_url, sheet_name, toml_keyfile_name)
+
 
 def addSchoolYear(df):
     # School year definition:
