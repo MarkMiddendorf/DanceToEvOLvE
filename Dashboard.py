@@ -14,16 +14,16 @@ scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/au
 
 # Load credentials from Streamlit secrets
 creds_dict = {
-    "type": st.secrets["gsheets"]["type"],
-    "project_id": st.secrets["gsheets"]["project_id"],
-    "private_key_id": st.secrets["gsheets"]["private_key_id"],
-    "private_key": st.secrets["gsheets"]["private_key"].replace("\\n", "\n"),  # replace escaped newlines
-    "client_email": st.secrets["gsheets"]["client_email"],
-    "client_id": st.secrets["gsheets"]["client_id"],
-    "auth_uri": st.secrets["gsheets"]["auth_uri"],
-    "token_uri": st.secrets["gsheets"]["token_uri"],
-    "auth_provider_x509_cert_url": st.secrets["gsheets"]["auth_provider_x509_cert_url"],
-    "client_x509_cert_url": st.secrets["gsheets"]["client_x509_cert_url"]
+    "type": st.secrets["type"],
+    "project_id": st.secrets["project_id"],
+    "private_key_id": st.secrets["private_key_id"],
+    "private_key": st.secrets["private_key"].replace("\\n", "\n"),  # replace escaped newlines
+    "client_email": st.secrets["client_email"],
+    "client_id": st.secrets["client_id"],
+    "auth_uri": st.secrets["auth_uri"],
+    "token_uri": st.secrets["token_uri"],
+    "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
+    "client_x509_cert_url": st.secrets["client_x509_cert_url"]
 }
 
 # Authorize the client using credentials
