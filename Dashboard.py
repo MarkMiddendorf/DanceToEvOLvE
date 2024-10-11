@@ -512,6 +512,8 @@ retention_df = df[(df['Class'].isin(selected_classes)) &
 
 retention_df = classify_students_by_attendance(retention_df)
 
+retentionWithStudentClass_df = retention_df
+
 # Calculate School Year Retention
 
 retention_df = calculate_school_year_retention(retention_df)
@@ -536,25 +538,55 @@ if not retention_df.empty:
 
 # Get retention rate for each city
     # Find the maximum year in the 'school year start' column
-    max_year = int(city_retention_df['School Year Start'].max())
+    #max_year = int(city_retention_df['School Year Start'].max())
 
     # Calculate the target year as max year - 1
-    target_year = max_year - 1
+    #target_year = max_year - 1
 
     # Ensure 'School Year Start' is converted to an integer type
     city_retention_df['School Year Start'] = pd.to_numeric(city_retention_df['School Year Start'], errors='coerce').astype('Int64')
     total_retention_df['School Year Start'] = pd.to_numeric(total_retention_df['School Year Start'], errors='coerce').astype('Int64')
 
-    # Filter for the target year and the corresponding retention rate for each city
-    chicago_retention_df = city_retention_df[(city_retention_df['Group'] == 'Chicago') &
-                                         (city_retention_df['School Year Start'] == target_year)]['Retention Rate']
+    # Calculate retention for each city by summing retained and total students for the prior year
+    def calculate_city_retention(df, city_name):
+        city_df = df[df['Group'] == city_name]
+        if city_df.empty:
+            return 0, 0  # Return zeroes if the city is not present in the filtered data
+        total_retained = city_df['Total Unique Students Retained'].sum()
+        total_prior_year = city_df['Total Unique Students in Prior Year'].sum()
+        return total_retained, total_prior_year
 
-    cleveland_retention_df = city_retention_df[(city_retention_df['Group'] == 'Cleveland') &
-                                           (city_retention_df['School Year Start']== target_year)]['Retention Rate']
+    # Initialize totals for combined retention
+    total_retained = 0
+    total_prior_year = 0
 
-    sandiego_retention_df = city_retention_df[(city_retention_df['Group'] == 'San Diego') &
-                                          (city_retention_df['School Year Start'] == target_year)]['Retention Rate']
-    total_retention2_df = total_retention_df[(total_retention_df['School Year Start'] == target_year)]
+    # Dictionary to store city retention rates
+    city_retention_rates = {}
+
+    # Calculate retention rates for each filtered city (if the filter exists)
+    if 'Chicago' in city_retention_df['Group'].unique():
+        chicago_retained, chicago_prior_year = calculate_city_retention(city_retention_df, 'Chicago')
+        total_retained += chicago_retained
+        total_prior_year += chicago_prior_year
+        city_retention_rates['Chicago'] = chicago_retained / chicago_prior_year if chicago_prior_year > 0 else 0
+
+    if 'Cleveland' in city_retention_df['Group'].unique():
+        cleveland_retained, cleveland_prior_year = calculate_city_retention(city_retention_df, 'Cleveland')
+        total_retained += cleveland_retained
+        total_prior_year += cleveland_prior_year
+        city_retention_rates['Cleveland'] = cleveland_retained / cleveland_prior_year if cleveland_prior_year > 0 else 0
+
+    if 'San Diego' in city_retention_df['Group'].unique():
+        sandiego_retained, sandiego_prior_year = calculate_city_retention(city_retention_df, 'San Diego')
+        total_retained += sandiego_retained
+        total_prior_year += sandiego_prior_year
+        city_retention_rates['San Diego'] = sandiego_retained / sandiego_prior_year if sandiego_prior_year > 0 else 0
+
+    # Calculate the total retention rate across all filtered cities
+    if total_prior_year > 0:
+        total_retention_rate = total_retained / total_prior_year
+        city_retention_rates['Total'] = total_retention_rate
+
 
     # Retention Calculation and Graph
     st.markdown("<h5 style='text-align: left;'>School Year Retention</h5>", unsafe_allow_html=True)
@@ -570,7 +602,7 @@ if not retention_df.empty:
                                         y='Retention Rate', 
                                         color='Group',  # Separate lines by city
                                         markers=True, 
-                                        title='Yearly Retention by Location %',
+                                        title='Yearly Retention by Location',
                                         category_orders={"School Year Start": sorted(location_retention_df['School Year Start'].unique())})  # Ensure proper year sorting
 
     # Update traces (markers and lines styling)
@@ -587,7 +619,7 @@ if not retention_df.empty:
         template='plotly_white',
         font=dict(size=14, color='black'),
         title_font=dict(size=24, color='white'),
-        title_x=0.25,
+        title_x=0.4,
         plot_bgcolor='rgba(0,0,0,0)',
         hovermode='x unified'
     )
@@ -598,10 +630,10 @@ if not retention_df.empty:
 
 
     # Extract and convert retention rate values to floats, keeping two decimal places
-    chicago_retention_value = round(float(chicago_retention_df.values[0]), 2) if not chicago_retention_df.empty else 0
-    cleveland_retention_value = round(float(cleveland_retention_df.values[0]), 2) if not cleveland_retention_df.empty else 0
-    sandiego_retention_value = round(float(sandiego_retention_df.values[0]), 2) if not sandiego_retention_df.empty else 0
-    total_retention_value = round(float(total_retention_df['Retention Rate (%)'].values[0]), 2) if not total_retention_df.empty else 0
+    chicago_retention_value = round(float(city_retention_rates.get('Chicago', 0)*100), 2)
+    cleveland_retention_value = round(float(city_retention_rates.get('Cleveland', 0)*100), 2)
+    sandiego_retention_value = round(float(city_retention_rates.get('San Diego', 0)*100), 2)
+    total_retention_value = round(float(city_retention_rates.get('Total', 0))*100, 2)
 
     # Display the retention rates in different columns
     col1, col2, col3, col4 = st.columns([2,2,2,2])
@@ -737,8 +769,320 @@ if not retention_df.empty:
     st.plotly_chart(fig)
 
 else:
-    st.warning("No data available for newly acquired students based on the selected filters.")
+    st.warning("No data available for Year over Year Retention based on the selected filters.")
 
 #Write dataframe
 st.write(retention_df)
 
+# SESSION TO SESSION RETENTION
+
+if not retentionWithStudentClass_df.empty:
+    
+    def calculate_flow_retention(df, group_by_cols, start_periods, end_periods):
+        # Filter DataFrame for start and end periods based on the Season and Session flow
+        group_start = df[(df['Season'] == start_periods[0][0]) & (df['Session'] == start_periods[0][1]) & (df['School Year'] == start_periods[1])].groupby(group_by_cols, observed=True)['DancerID'].apply(set)
+        
+        # Check if there's data for the end period, otherwise skip
+        if not df[(df['Season'] == end_periods[0][0]) & (df['Session'] == end_periods[0][1]) & (df['School Year'] == end_periods[1])].empty:
+            group_end = df[(df['Season'] == end_periods[0][0]) & (df['Session'] == end_periods[0][1]) & (df['School Year'] == end_periods[1])].groupby(group_by_cols, observed=True)['DancerID'].apply(set)
+        else:
+            return {}  # If no end period data, skip this retention calculation
+
+        retention_results = {}
+
+        for group in group_start.index:
+            try:
+                if group in group_end:
+                    start_count = len(group_start[group])  # Total unique students in the starting period
+                    end_count = len(group_end[group])  # Total unique students in the end period
+                    retained_students = group_start[group].intersection(group_end[group])  # Unique students retained
+                    retained_count = len(retained_students)  # Count of unique retained students
+
+                    # Ensure correct filtering by group values
+                    group_condition = True
+                    for col, value in zip(group_by_cols, group if isinstance(group, tuple) else [group]):
+                        group_condition &= df[col] == value
+
+                    # Filter for retained students and total students for the start period within the same group
+                    retained_student_types = df[(df['DancerID'].isin(retained_students)) & (df['Season'] == end_periods[0][0]) & (df['Session'] == end_periods[0][1]) & group_condition]
+                    total_student_types = df[(df['Season'] == start_periods[0][0]) & (df['Session'] == start_periods[0][1]) & group_condition]
+
+                    # Check if the prior year exists in the data
+                    prior_year = start_periods[1] - 1
+                    if f'Type_{prior_year}' in df.columns:
+                        # Count unique student IDs for each type (retained students) in the prior year
+                        retained_type_counts = retained_student_types.groupby(f'Type_{prior_year}')['DancerID'].nunique()
+
+                        # Count unique student IDs for each type (total students in start period) in the prior year
+                        total_type_counts = total_student_types.groupby(f'Type_{prior_year}')['DancerID'].nunique()
+                    else:
+                        # Skip calculation or assign 0s if there is no type for the prior year
+                        retained_type_counts = {}
+                        total_type_counts = {}
+
+                    # Convert to dictionaries for easier access
+                    retained_type_counts_dict = retained_type_counts
+                    total_type_counts_dict = total_type_counts
+
+                    # Calculate retention rate
+                    retention_rate = retained_count / start_count if start_count > 0 else 0
+
+                    # Store the results, including type counts for retained and total students
+                    retention_results[group] = {
+                        'Total Students in Start Period': start_count,
+                        'Total Students in End Period': end_count,
+                        'Total Students Retained': retained_count,
+                        'Retention Rate': retention_rate,
+                    }
+
+                    # Add type counts for retained and total students to retention results
+                    for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
+                        retention_results[group][f'Type_{student_type} Retained Count'] = retained_type_counts_dict.get(f'Type {student_type}', 0)
+                        retention_results[group][f'Type_{student_type} Total Count'] = total_type_counts_dict.get(f'Type {student_type}', 0)
+
+            except Exception as e:
+                st.write(f"Error processing group {group} for periods {start_periods[1]}-{end_periods[1]}: {e}")
+
+        return retention_results
+
+
+    # Updated function to handle year transitions correctly, including the final year case
+    def calculate_flow_based_retention(df):
+        retention_results = []
+
+        # Define the flow for intra-year and inter-year transitions
+        flow = [
+            (('Summer', 1), ('Summer', 2)),
+            (('Summer', 2), ('Fall', 1)),
+            (('Fall', 1), ('Fall', 2)),
+            (('Fall', 2), ('Winter', 1)),
+            (('Winter', 1), ('Winter', 2)),
+            (('Winter', 2), ('Spring', 1)),
+            (('Spring', 1), ('Spring', 2)),
+            (('Spring', 2), ('Summer', 1))  # Transition to next year after Spring 2
+        ]
+
+        # Define groupings
+        group_by_combinations = [
+            ['City'],
+            ['Location'],
+            ['Class'],
+            ['Teacher'],
+            ['Reg/Non Reg'],
+        ]
+
+        # Loop through the selected years and flow
+        years = sorted(df['School Year'].dropna().unique())
+
+        for year in years:
+            for (start_period, end_period) in flow:
+                # Only increment the year when transitioning from Spring 2 to Summer 1
+                if start_period == ('Spring', 2) and end_period == ('Summer', 1):
+                    end_year = year + 1 if year + 1 in years else year  # Handle the final year case by keeping the same year if no next year
+                else:
+                    end_year = year
+
+                start_periods = (start_period, year)
+                end_periods = (end_period, end_year)
+
+                # Make sure that we only calculate retention for available years and periods
+                if end_periods[1] in years or (end_period[0] == 'Summer' and year == years[-1]):
+                    for group_by in group_by_combinations:
+                        try:
+                            retention = calculate_flow_retention(df, group_by, start_periods, end_periods)
+                            if retention:
+                                for group, data in retention.items():
+                                    retention_results.append({
+                                        'Group': group,
+                                        'Start Year': start_periods[1],
+                                        'End Year': end_periods[1],
+                                        'Start Season': start_periods[0][0],
+                                        'End Season': end_periods[0][0],
+                                        'Start Session': start_periods[0][1],
+                                        'End Session': end_periods[0][1],
+                                        'Total Unique Students in Start Period': data['Total Students in Start Period'],
+                                        'Total Unique Students in End Period': data['Total Students in End Period'],
+                                        'Total Unique Students Retained': data['Total Students Retained'],
+                                        'Retention Rate': f"{data['Retention Rate'] * 100:.2f}",
+                                        'Type_8 Retained Count': data['Type_8 Retained Count'],
+                                        'Type_7 Retained Count': data['Type_7 Retained Count'],
+                                        'Type_6 Retained Count': data['Type_6 Retained Count'],
+                                        'Type_5 Retained Count': data['Type_5 Retained Count'],
+                                        'Type_4 Retained Count': data['Type_4 Retained Count'],
+                                        'Type_3 Retained Count': data['Type_3 Retained Count'],
+                                        'Type_2 Retained Count': data['Type_2 Retained Count'],
+                                        'Type_1 Retained Count': data['Type_1 Retained Count'],
+                                        'Type_8 Total Count': data['Type_8 Total Count'],
+                                        'Type_7 Total Count': data['Type_7 Total Count'],
+                                        'Type_6 Total Count': data['Type_6 Total Count'],
+                                        'Type_5 Total Count': data['Type_5 Total Count'],
+                                        'Type_4 Total Count': data['Type_4 Total Count'],
+                                        'Type_3 Total Count': data['Type_3 Total Count'],
+                                        'Type_2 Total Count': data['Type_2 Total Count'],
+                                        'Type_1 Total Count': data['Type_1 Total Count'],
+                                        'Calculation Type': 'Flow-Based Retention'
+                                    })
+
+                        except Exception as e:
+                            print(f"Error processing group {group_by} for periods {start_period}-{end_period}: {e}")
+
+        return pd.DataFrame(retention_results)
+
+
+
+    retention_flow_df = calculate_flow_based_retention(retentionWithStudentClass_df)
+    
+    #Filter by Location
+    location_flowretention_df = retention_flow_df[retention_flow_df['Group'].isin(selected_locations)]
+
+    # Retention Calculation and Graph
+    st.markdown("<h5 style='text-align: left;'>Session over Session Retention</h5>", unsafe_allow_html=True)
+
+    # Create a column combining 'Start Year', 'Start Season', and 'Start Session' for the y-axis
+    location_flowretention_df['Period'] = location_flowretention_df['Start Year'].astype(str) + ' ' + location_flowretention_df['Start Season'] + ' ' + location_flowretention_df['Start Session'].astype(str)
+
+    # Create the line plot using Plotly
+    fig = px.line(
+        location_flowretention_df,
+        x='Period',
+        y='Retention Rate',
+        title='Retention Rates Session over Session',
+        markers=True,
+        color='Group',
+        labels={
+            'Period': 'Start Period (Year, Season, Session)',
+            'Retention Rate': 'Retention Rate (%)'
+        }
+    )
+
+    # Customize the layout
+    fig.update_layout(
+        yaxis_title="Retention Rate (%)",
+        xaxis_title="Year-Season-Session",
+        title_x=0.4,  # Center the title
+        height=600
+    )
+
+    # Streamlit display
+    st.plotly_chart(fig, use_container_width=True)
+
+    #Plot Pie Chart
+    # Sum the counts for each type
+    type_counts = location_flowretention_df[['Type_8 Retained Count', 'Type_7 Retained Count', 'Type_6 Retained Count', 'Type_5 Retained Count', 'Type_4 Retained Count', 
+                                        'Type_3 Retained Count', 'Type_2 Retained Count', 'Type_1 Retained Count']].sum()
+
+    # Create a pie chart for the counts
+    figPie = px.pie(values=type_counts, 
+                names=type_counts.index, 
+                title='Retained Students by number of Sessions Attended Previous Year',
+                labels={'names': 'Type'})
+
+    # Customize pie chart appearance (optional)
+    figPie.update_traces(textposition='inside', textinfo='percent+label')
+    figPie.update_layout(showlegend=True)
+
+    # Calculate the retention percentages for each type (Type_8 to Type_1)
+    for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
+        retained_col = f'Type_{student_type} Retained Count'
+        total_col = f'Type_{student_type} Total Count'
+        
+        # Calculate the retention percentage (retained / total)
+        retention_flow_df[f'Type_{student_type} Retention'] = retention_flow_df[retained_col] / retention_flow_df[total_col] * 100
+
+    # Filter the retention_df based on selected locations
+    filtered_retentionflow_df = retention_flow_df[retention_flow_df['Group'].isin(selected_locations)]
+
+    # Calculate the retention percentages for each type
+    retention_percentages = {}
+    for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
+        retained_col = f'Type_{student_type} Retained Count'
+        total_col = f'Type_{student_type} Total Count'
+        
+        # Calculate the sum of retained counts and total counts for each type
+        sum_retained = filtered_retentionflow_df[retained_col].sum()
+        sum_total = filtered_retentionflow_df[total_col].sum()
+        
+        # Calculate the retention percentage for each type (sum_retained / sum_total)
+        retention_percentages[retained_col] = (sum_retained / sum_total * 100) if sum_total > 0 else 0
+
+    # Prepare the data for plotting
+    data = pd.DataFrame({
+        'Type': [f'Type_{student_type}' for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']],
+        'Retention Percentage': [retention_percentages[f'Type_{student_type} Retained Count'] for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']]
+    })
+
+    # Plot the bar chart
+    fig = px.bar(data, x='Type', y='Retention Percentage', 
+                title='Retention Percentage by Number of Sessions Attended the Previous Year',
+                labels={'Retention Percentage': 'Retention %'},
+                text='Retention Percentage')
+
+    # Customize the appearance of the bar chart
+    fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+    # Fix the y-axis scale to properly reflect percentages and remove decimals
+    fig.update_layout(
+        yaxis=dict(range=[0, 100], showgrid=True, ticksuffix='%'),  # Set the y-axis range from 0 to 100%
+        title_font=dict(size=16),
+        font=dict(size=14)
+)
+
+    # Create two columns for side-by-side layout
+    col1, col2 = st.columns(2)
+
+    # Display the bar chart in the first column
+    with col1:
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Display the pie chart in the second column
+    with col2:
+        st.plotly_chart(figPie, use_container_width=True)
+
+    # Sum the total counts for each type
+    total_counts = {
+        'Type_8 Total Count': filtered_retentionflow_df['Type_8 Total Count'].sum(),
+        'Type_7 Total Count': filtered_retentionflow_df['Type_7 Total Count'].sum(),
+        'Type_6 Total Count': filtered_retentionflow_df['Type_6 Total Count'].sum(),
+        'Type_5 Total Count': filtered_retentionflow_df['Type_5 Total Count'].sum(),
+        'Type_4 Total Count': filtered_retentionflow_df['Type_4 Total Count'].sum(),
+        'Type_3 Total Count': filtered_retentionflow_df['Type_3 Total Count'].sum(),
+        'Type_2 Total Count': filtered_retentionflow_df['Type_2 Total Count'].sum(),
+        'Type_1 Total Count': filtered_retentionflow_df['Type_1 Total Count'].sum(),
+    }
+
+    # Prepare the data for plotting
+    data = pd.DataFrame({
+        'Type': list(total_counts.keys()),
+        'Total Count': list(total_counts.values())
+    })
+
+    # Create the histogram using Plotly
+    fig = px.bar(data, x='Type', y='Total Count', 
+                title='Sum of Total Counts by Type',
+                labels={'Total Count': 'Sum of Total Count'},
+                text='Total Count')
+
+    # Customize the appearance of the histogram
+    fig.update_traces(texttemplate='%{text:.0f}', textposition='outside')
+
+    # Center the title, make the font bigger, and center the graph
+    fig.update_layout(
+        title={
+            'text': 'Sum of Total Counts by Type',
+            'y': 0.95,  # Position the title higher
+            'x': 0.5,   # Center the title horizontally
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}  # Increase title font size
+        },
+        yaxis_tickformat='', 
+        width = 1300,
+        margin=dict(l=50, r=50, t=100, b=50),  # Center the entire chart by adjusting margins
+    )
+
+
+    # Show the histogram
+    st.plotly_chart(fig)
+
+    st.write(retention_flow_df)
+else:
+    st.warning("No data available for Session over Session Retention based on the selected filters.")
