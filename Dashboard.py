@@ -1083,6 +1083,6 @@ if not retentionWithStudentClass_df.empty:
     # Show the histogram
     st.plotly_chart(fig)
 
-    st.write(retention_flow_df)
+    st.write(filtered_retentionflow_df)
 else:
     st.warning("No data available for Session over Session Retention based on the selected filters.")
