@@ -392,8 +392,8 @@ def classify_student(attendance, thresholds):
 
 def calculate_retention(df, group_by_cols, start_periods, end_periods):
     # Filter DataFrame for start and end periods based on School Year
-    group_start = df[df['School Year'].isin(start_periods)].groupby(group_by_cols, observed=True)['DancerID'].apply(set)
-    group_end = df[df['School Year'].isin(end_periods)].groupby(group_by_cols, observed=True)['DancerID'].apply(set)
+    group_start = df[df['School Year'].isin(start_periods)].groupby(group_by_cols, observed=False)['DancerID'].apply(set)
+    group_end = df[df['School Year'].isin(end_periods)].groupby(group_by_cols, observed=False)['DancerID'].apply(set)
 
     retention_results = {}
     
