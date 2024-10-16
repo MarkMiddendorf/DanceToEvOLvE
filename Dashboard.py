@@ -702,7 +702,7 @@ if not retention_df.empty:
     figPie.update_layout(showlegend=True)
 
     # Calculate the retention percentages for each type (Type_8 to Type_1)
-     for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
+    for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
          retained_col = f'Type_{student_type} Retained Count Previous'
          total_col = f'Type_{student_type} Total Count Previous Year'
         
@@ -713,8 +713,8 @@ if not retention_df.empty:
     filtered_retention_df = retention_df[retention_df['Group'].isin(selected_locations)]
 
     # Calculate the retention percentages for each type
-     retention_percentages = {}
-     for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
+    retention_percentages = {}
+    for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
          retained_col = f'Type_{student_type} Retained Count Previous'
          total_col = f'Type_{student_type} Total Count Previous Year'
         
@@ -732,29 +732,29 @@ if not retention_df.empty:
      })
 
     # Plot the bar chart
-     fig = px.bar(data, x='Type', y='Retention Percentage', 
+    fig = px.bar(data, x='Type', y='Retention Percentage', 
                  title='Retention Percentage by Number of Sessions Attended the Previous Year',
                  labels={'Retention Percentage': 'Retention %'},
                  text='Retention Percentage')
 
       #Customize the appearance of the bar chart
-     fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+    fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
      #Fix the y-axis scale to properly reflect percentages and remove decimals
-     fig.update_layout(
+    fig.update_layout(
          yaxis=dict(range=[0, 100], showgrid=True, ticksuffix='%'),  # Set the y-axis range from 0 to 100%
          title_font=dict(size=16),
          font=dict(size=14)
  )
 
      #Create two columns for side-by-side layout
-     col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
     # Display the bar chart in the first column
-     with col1:
+    with col1:
            st.plotly_chart(fig, use_container_width=True)
 
     # Display the pie chart in the second column
-     with col2:
+    with col2:
          st.plotly_chart(figPie, use_container_width=True)
 
 # Sum the total counts for each type
