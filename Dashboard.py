@@ -748,7 +748,7 @@ if not retention_df.empty:
   #      st.plotly_chart(figPie, use_container_width=True)
 
 # Sum the total counts for each type
-    total_counts = {
+    total_countsPrev = {
         'Type_8 Retention Count': filtered_retention_df['Type_8 Retained Count Previous'].sum(),
         'Type_7 Retention Count': filtered_retention_df['Type_7 Retained Count Previous'].sum(),
         'Type_6 Retention Count': filtered_retention_df['Type_6 Retained Count Previous'].sum(),
@@ -759,7 +759,7 @@ if not retention_df.empty:
         'Type_1 Retention Count': filtered_retention_df['Type_1 Retained Count Previous'].sum(),
     }
     # Sum the total counts for each type
-    total_countsPrev = {
+    total_counts = {
         'Type_8 Retention Count': filtered_retention_df['Type_8 Retained Count Current'].sum(),
         'Type_7 Retention Count': filtered_retention_df['Type_7 Retained Count Current'].sum(),
         'Type_6 Retention Count': filtered_retention_df['Type_6 Retained Count Current'].sum(),
@@ -793,7 +793,7 @@ if not retention_df.empty:
     # Center the title, make the font bigger, and center the graph
     figCurrent.update_layout(
         title={
-            'text': "Total Unique Student's Type for Current Year",
+            'text': "Retention by Student's Type for Current Year",
             'y': 1,  # Position the title higher
             'x': 0.5,   # Center the title horizontally
             'xanchor': 'center',
@@ -816,7 +816,7 @@ if not retention_df.empty:
     # Center the title, make the font bigger, and center the graph
     fig.update_layout(
         title={
-            'text': "Total Unique Student's Type for Previous Year",
+            'text': "Retention by Student's Type for Previous Year",
             'y': 1,  # Position the title higher
             'x': 0.5,   # Center the title horizontally
             'xanchor': 'center',
