@@ -420,7 +420,7 @@ def calculate_retention(df, group_by_cols, start_periods, end_periods):
 
                 # Count unique student IDs for each type (total students in start period)
                 total_type_counts = total_student_types.groupby(f'Type_{start_periods[0]}')['DancerID'].nunique()
-                total_type_countsEnd = total_student_types.groupby(f'Type_{end_periods[0]}')['DancerID'].nunique()
+                total_type_countsEnd = total_student_typesEnd.groupby(f'Type_{end_periods[0]}')['DancerID'].nunique()
 
                 # Convert to dictionaries for easier access
                 retained_type_counts_dict = retained_type_counts.to_dict()
