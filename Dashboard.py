@@ -737,35 +737,51 @@ if not retention_df.empty:
 
     # Sum the total counts for each type
     total_counts = {
-        'Type_8 Total Count Current Year': filtered_retention_df['Type_8 Total Count Current Year'].sum(),
-        'Type_7 Total Count Current Year': filtered_retention_df['Type_7 Total Count Current Year'].sum(),
-        'Type_6 Total Count Current Year': filtered_retention_df['Type_6 Total Count Current Year'].sum(),
-        'Type_5 Total Count Current Year': filtered_retention_df['Type_5 Total Count Current Year'].sum(),
-        'Type_4 Total Count Current Year': filtered_retention_df['Type_4 Total Count Current Year'].sum(),
-        'Type_3 Total Count Current Year': filtered_retention_df['Type_3 Total Count Current Year'].sum(),
-        'Type_2 Total Count Current Year': filtered_retention_df['Type_2 Total Count Current Year'].sum(),
-        'Type_1 Total Count Current Year': filtered_retention_df['Type_1 Total Count Current Year'].sum(),
+        'Type_8 Total Count Year': filtered_retention_df['Type_8 Total Count Current Year'].sum(),
+        'Type_7 Total Count Year': filtered_retention_df['Type_7 Total Count Current Year'].sum(),
+        'Type_6 Total Count Year': filtered_retention_df['Type_6 Total Count Current Year'].sum(),
+        'Type_5 Total Count Year': filtered_retention_df['Type_5 Total Count Current Year'].sum(),
+        'Type_4 Total Count Year': filtered_retention_df['Type_4 Total Count Current Year'].sum(),
+        'Type_3 Total Count Year': filtered_retention_df['Type_3 Total Count Current Year'].sum(),
+        'Type_2 Total Count Year': filtered_retention_df['Type_2 Total Count Current Year'].sum(),
+        'Type_1 Total Count Year': filtered_retention_df['Type_1 Total Count Current Year'].sum(),
+    }
+    # Sum the total counts for each type
+    total_countsPrev = {
+        'Type_8 Total Count Year': filtered_retention_df['Type_8 Total Count Previous Year'].sum(),
+        'Type_7 Total Count Year': filtered_retention_df['Type_7 Total Count Previous Year'].sum(),
+        'Type_6 Total Count Year': filtered_retention_df['Type_6 Total Count Previous Year'].sum(),
+        'Type_5 Total Count Year': filtered_retention_df['Type_5 Total Count Previous Year'].sum(),
+        'Type_4 Total Count Year': filtered_retention_df['Type_4 Total Count Previous Year'].sum(),
+        'Type_3 Total Count Year': filtered_retention_df['Type_3 Total Count Previous Year'].sum(),
+        'Type_2 Total Count Year': filtered_retention_df['Type_2 Total Count Previous Year'].sum(),
+        'Type_1 Total Count Year': filtered_retention_df['Type_1 Total Count Previous Year'].sum(),
     }
 
     # Prepare the data for plotting
-    data = pd.DataFrame({
+    dataCurrent = pd.DataFrame({
         'Type': list(total_counts.keys()),
         'Total Count': list(total_counts.values())
     })
+    # Prepare the data for plotting
+    dataPrevious = pd.DataFrame({
+        'Type': list(total_countsPrev.keys()),
+        'Total Count': list(total_countsPrev.values())
+    })
 
     # Create the histogram using Plotly
-    fig = px.bar(data, x='Type', y='Total Count', 
+    figCurrent = px.bar(dataCurrent, x='Type', y='Total Count', 
                 title='Sum of Total Counts by Type',
                 labels={'Total Count': 'Sum of Total Count'},
                 text='Total Count')
 
     # Customize the appearance of the histogram
-    fig.update_traces(texttemplate='%{text:.0f}', textposition='outside')
+    figCurrent.update_traces(texttemplate='%{text:.0f}', textposition='outside')
 
     # Center the title, make the font bigger, and center the graph
-    fig.update_layout(
+    figCurrent.update_layout(
         title={
-            'text': 'Sum of Total Counts by Type',
+            'text': 'Sum of Total Counts by Type Current Year',
             'y': 1,  # Position the title higher
             'x': 0.5,   # Center the title horizontally
             'xanchor': 'center',
@@ -777,9 +793,39 @@ if not retention_df.empty:
         margin=dict(l=50, r=50, t=0, b=50),  # Center the entire chart by adjusting margins
     )
 
+    fig = px.bar(dataPrevious, x='Type', y='Total Count', 
+                title='Sum of Total Counts by Type',
+                labels={'Total Count': 'Sum of Total Count'},
+                text='Total Count')
 
-    # Show the histogram
-    st.plotly_chart(fig)
+    # Customize the appearance of the histogram
+    fig.update_traces(texttemplate='%{text:.0f}', textposition='outside')
+
+    # Center the title, make the font bigger, and center the graph
+    fig.update_layout(
+        title={
+            'text': 'Sum of Total Counts by Type Previous Year',
+            'y': 1,  # Position the title higher
+            'x': 0.5,   # Center the title horizontally
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}  # Increase title font size
+        },
+        yaxis_tickformat='', 
+        width = 1300,
+        margin=dict(l=50, r=50, t=0, b=50),  # Center the entire chart by adjusting margins
+    )
+
+    # Create two columns for side-by-side layout
+    col1, col2 = st.columns(2)
+
+    # Display the bar chart in the first column
+    with col1:
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Display the pie chart in the second column
+    with col2:
+        st.plotly_chart(figCurrent, use_container_width=True)
 
 else:
     st.warning("No data available for Year over Year Retention based on the selected filters.")
