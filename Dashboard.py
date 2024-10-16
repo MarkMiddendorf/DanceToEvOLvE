@@ -705,7 +705,7 @@ if not retention_df.empty:
     # Calculate the retention percentages for each type
     retention_percentages = {}
     for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
-        retained_col = f'Type_{student_type} Retained Count'
+        retained_col = f'Type_{student_type} Retained Count Previous'
         total_col = f'Type_{student_type} Total Count Previous Year'
         
         # Calculate the sum of retained counts and total counts for each type
