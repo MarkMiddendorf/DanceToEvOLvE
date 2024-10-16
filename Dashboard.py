@@ -718,7 +718,7 @@ if not retention_df.empty:
     # Prepare the data for plotting
     data = pd.DataFrame({
         'Type': [f'Type_{student_type}' for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']],
-        'Retention Percentage': [retention_percentages[f'Type_{student_type} Retained Count'] for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']]
+        'Retention Percentage': [retention_percentages[f'Type_{student_type} Retained Count Previous'] for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']]
     })
 
     # Plot the bar chart
