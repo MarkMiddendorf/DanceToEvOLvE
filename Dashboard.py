@@ -781,7 +781,7 @@ if not retention_df.empty:
     # Center the title, make the font bigger, and center the graph
     figCurrent.update_layout(
         title={
-            'text': 'Sum of Total Counts by Type Current Year',
+            'text': "Total Unique Student's Type for Current Year",
             'y': 1,  # Position the title higher
             'x': 0.5,   # Center the title horizontally
             'xanchor': 'center',
@@ -804,7 +804,7 @@ if not retention_df.empty:
     # Center the title, make the font bigger, and center the graph
     fig.update_layout(
         title={
-            'text': 'Sum of Total Counts by Type Previous Year',
+            'text': "Total Unique Student's Type for Previous Year",
             'y': 1,  # Position the title higher
             'x': 0.5,   # Center the title horizontally
             'xanchor': 'center',
