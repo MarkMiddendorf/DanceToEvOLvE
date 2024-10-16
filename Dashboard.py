@@ -417,6 +417,8 @@ def calculate_retention(df, group_by_cols, start_periods, end_periods):
                      
                 # Count unique student IDs for each type (retained students)
                 retained_type_counts = retained_student_types.groupby(f'Type_{start_periods[0]}')['DancerID'].nunique()
+                # Count unique student IDs for each type (retained students)
+                retained_type_countsCurrent = retained_student_types.groupby(f'Type_{end_periods[0]}')['DancerID'].nunique()
 
                 # Count unique student IDs for each type (total students in start period)
                 total_type_counts = total_student_types.groupby(f'Type_{start_periods[0]}')['DancerID'].nunique()
@@ -424,6 +426,7 @@ def calculate_retention(df, group_by_cols, start_periods, end_periods):
 
                 # Convert to dictionaries for easier access
                 retained_type_counts_dict = retained_type_counts.to_dict()
+                retained_type_countsCurrent_dict = retained_type_countsCurrent.to_dict()
                 total_type_counts_dict = total_type_counts.to_dict()
                 total_type_countsEnd_dict = total_type_countsEnd.to_dict()
                      
@@ -440,7 +443,8 @@ def calculate_retention(df, group_by_cols, start_periods, end_periods):
 
                 # Add type counts for retained and total students to retention results
                 for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
-                    retention_results[group][f'Type_{student_type} Retained Count'] = retained_type_counts_dict.get(f'Type {student_type}', 0)
+                    retention_results[group][f'Type_{student_type} Retained Count Previous'] = retained_type_counts_dict.get(f'Type {student_type}', 0)
+                    retention_results[group][f'Type_{student_type} Retained Count Current'] = retained_type_countsCurrent_dict.get(f'Type {student_type}', 0)
                     retention_results[group][f'Type_{student_type} Total Count Previous Year'] = total_type_counts_dict.get(f'Type {student_type}', 0)
                     retention_results[group][f'Type_{student_type} Total Count Current Year'] = total_type_countsEnd_dict.get(f'Type {student_type}', 0)
         
@@ -479,14 +483,22 @@ def calculate_school_year_retention(df):
                         'Total Unique Students in Current Year': data['Total Students in Current Year'],
                         'Total Unique Students Retained': data['Total Students Retained'],
                         'Retention Rate': f"{data['Retention Rate'] * 100:.2f}",
-                        'Type_8 Retained Count': data['Type_8 Retained Count'],
-                        'Type_7 Retained Count': data['Type_7 Retained Count'],
-                        'Type_6 Retained Count': data['Type_6 Retained Count'],
-                        'Type_5 Retained Count': data['Type_5 Retained Count'],
-                        'Type_4 Retained Count': data['Type_4 Retained Count'],
-                        'Type_3 Retained Count': data['Type_3 Retained Count'],
-                        'Type_2 Retained Count': data['Type_2 Retained Count'],
-                        'Type_1 Retained Count': data['Type_1 Retained Count'],
+                        'Type_8 Retained Count Previous': data['Type_8 Retained Count Previous'],
+                        'Type_7 Retained Count Previous': data['Type_7 Retained Count Previous'],
+                        'Type_6 Retained Count Previous': data['Type_6 Retained Count Previous'],
+                        'Type_5 Retained Count Previous': data['Type_5 Retained Count Previous'],
+                        'Type_4 Retained Count Previous': data['Type_4 Retained Count Previous'],
+                        'Type_3 Retained Count Previous': data['Type_3 Retained Count Previous'],
+                        'Type_2 Retained Count Previous': data['Type_2 Retained Count Previous'],
+                        'Type_1 Retained Count Previous': data['Type_1 Retained Count Previous'],
+                        'Type_8 Retained Count Current': data['Type_8 Retained Count Current'],
+                        'Type_7 Retained Count Current': data['Type_7 Retained Count Current'],
+                        'Type_6 Retained Count Current': data['Type_6 Retained Count Current'],
+                        'Type_5 Retained Count Current': data['Type_5 Retained Count Current'],
+                        'Type_4 Retained Count Current': data['Type_4 Retained Count Current'],
+                        'Type_3 Retained Count Current': data['Type_3 Retained Count Current'],
+                        'Type_2 Retained Count Current': data['Type_2 Retained Count Current'],
+                        'Type_1 Retained Count Current': data['Type_1 Retained Count Current'],
                         'Type_8 Total Count Current Year': data['Type_8 Total Count Current Year'],
                         'Type_7 Total Count Current Year': data['Type_7 Total Count Current Year'],
                         'Type_6 Total Count Current Year': data['Type_6 Total Count Current Year'],
