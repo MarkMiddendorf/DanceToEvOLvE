@@ -726,7 +726,7 @@ if not retention_df.empty:
          retention_percentages[retained_col] = (sum_retained / sum_total * 100) if sum_total > 0 else 0
 
      #Prepare the data for plotting
-     data = pd.DataFrame({
+    data = pd.DataFrame({
          'Type': [f'Type_{student_type}' for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']],
          'Retention Percentage': [retention_percentages[f'Type_{student_type} Retained Count Previous'] for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']]
      })
