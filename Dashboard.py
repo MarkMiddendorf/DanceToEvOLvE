@@ -939,7 +939,7 @@ if not retentionWithStudentClass_df.empty:
     st.markdown("<h5 style='text-align: left;'>Session over Session Retention</h5>", unsafe_allow_html=True)
 
     # Create a column combining 'Start Year', 'Start Season', and 'Start Session' for the y-axis
-    location_flowretention_df['Period'] = location_flowretention_df['Start Year'].astype(str) + ' ' + location_flowretention_df['Start Season'] + ' ' + location_flowretention_df['Start Session'].astype(str)
+    location_flowretention_df['Period'] = location_flowretention_df['End Year'].astype(str) + ' ' + location_flowretention_df['End Season'] + ' ' + location_flowretention_df['End Session'].astype(str)
 
     # Create the line plot using Plotly
     fig = px.line(
@@ -991,97 +991,6 @@ if not retentionWithStudentClass_df.empty:
 
     # Filter the retention_df based on selected locations
     filtered_retentionflow_df = retention_flow_df[retention_flow_df['Group'].isin(selected_locations)]
-
-    # Calculate the retention percentages for each type
-    retention_percentages = {}
-    for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
-        retained_col = f'Type_{student_type} Retained Count'
-        total_col = f'Type_{student_type} Total Count'
-        
-        # Calculate the sum of retained counts and total counts for each type
-        sum_retained = filtered_retentionflow_df[retained_col].sum()
-        sum_total = filtered_retentionflow_df[total_col].sum()
-        
-        # Calculate the retention percentage for each type (sum_retained / sum_total)
-        retention_percentages[retained_col] = (sum_retained / sum_total * 100) if sum_total > 0 else 0
-
-    # Prepare the data for plotting
-    data = pd.DataFrame({
-        'Type': [f'Type_{student_type}' for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']],
-        'Retention Percentage': [retention_percentages[f'Type_{student_type} Retained Count'] for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']]
-    })
-
-    # Plot the bar chart
-    fig = px.bar(data, x='Type', y='Retention Percentage', 
-                title='Retention Percentage by Number of Sessions Attended the Previous Year',
-                labels={'Retention Percentage': 'Retention %'},
-                text='Retention Percentage')
-
-    # Customize the appearance of the bar chart
-    fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
-    # Fix the y-axis scale to properly reflect percentages and remove decimals
-    fig.update_layout(
-        yaxis=dict(range=[0, 100], showgrid=True, ticksuffix='%'),  # Set the y-axis range from 0 to 100%
-        title_font=dict(size=16),
-        font=dict(size=14)
-)
-
-    # Create two columns for side-by-side layout
-    col1, col2 = st.columns(2)
-
-    # Display the bar chart in the first column
-    with col1:
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Display the pie chart in the second column
-    with col2:
-        st.plotly_chart(figPie, use_container_width=True)
-
-    # Sum the total counts for each type
-    total_counts = {
-        'Type_8 Total Count': filtered_retentionflow_df['Type_8 Total Count'].sum(),
-        'Type_7 Total Count': filtered_retentionflow_df['Type_7 Total Count'].sum(),
-        'Type_6 Total Count': filtered_retentionflow_df['Type_6 Total Count'].sum(),
-        'Type_5 Total Count': filtered_retentionflow_df['Type_5 Total Count'].sum(),
-        'Type_4 Total Count': filtered_retentionflow_df['Type_4 Total Count'].sum(),
-        'Type_3 Total Count': filtered_retentionflow_df['Type_3 Total Count'].sum(),
-        'Type_2 Total Count': filtered_retentionflow_df['Type_2 Total Count'].sum(),
-        'Type_1 Total Count': filtered_retentionflow_df['Type_1 Total Count'].sum(),
-    }
-
-    # Prepare the data for plotting
-    data = pd.DataFrame({
-        'Type': list(total_counts.keys()),
-        'Total Count': list(total_counts.values())
-    })
-
-    # Create the histogram using Plotly
-    fig = px.bar(data, x='Type', y='Total Count', 
-                title='Sum of Total Counts by Type',
-                labels={'Total Count': 'Sum of Total Count'},
-                text='Total Count')
-
-    # Customize the appearance of the histogram
-    fig.update_traces(texttemplate='%{text:.0f}', textposition='outside')
-
-    # Center the title, make the font bigger, and center the graph
-    fig.update_layout(
-        title={
-            'text': 'Sum of Total Counts by Type',
-            'y': 0.95,  # Position the title higher
-            'x': 0.5,   # Center the title horizontally
-            'xanchor': 'center',
-            'yanchor': 'top',
-            'font': {'size': 20}  # Increase title font size
-        },
-        yaxis_tickformat='', 
-        width = 1300,
-        margin=dict(l=50, r=50, t=100, b=50),  # Center the entire chart by adjusting margins
-    )
-
-
-    # Show the histogram
-    st.plotly_chart(fig)
 
     st.write(filtered_retentionflow_df)
 else:
