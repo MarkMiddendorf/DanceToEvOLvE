@@ -537,7 +537,7 @@ retention_df = df[(df['Class'].isin(selected_classes)) &
 retention_df = classify_students_by_attendance(retention_df)
 
 retentionWithStudentClass_df = retention_df
-st.write(retentionWithStudentClass_df)
+#st.write(retentionWithStudentClass_df)
 
 # Calculate School Year Retention
 
@@ -678,63 +678,155 @@ if not retention_df.empty:
 
     #Plot Pie Chart
     # Sum the counts for each type
-    type_counts = location_retention_df[['Type_8 Retained Count Previous', 'Type_7 Retained Count Previous', 'Type_6 Retained Count Previous', 'Type_5 Retained Count Previous', 'Type_4 Retained Count Previous', 
-                                        'Type_3 Retained Count Previous', 'Type_2 Retained Count Previous', 'Type_1 Retained Count Previous']].sum()
+    #type_counts = location_retention_df[['Type_8 Retained Count Previous', 'Type_7 Retained Count Previous', 'Type_6 Retained Count Previous', 'Type_5 Retained Count Previous', 'Type_4 Retained Count Previous', 
+                                        #'Type_3 Retained Count Previous', 'Type_2 Retained Count Previous', 'Type_1 Retained Count Previous']].sum()
 
     # Create a pie chart for the counts
-    figPie = px.pie(values=type_counts, 
-                names=type_counts.index, 
-                title='Retained Students by number of Sessions Attended Previous Year',
-                labels={'names': 'Type'})
+    #figPie = px.pie(values=type_counts, 
+                #names=type_counts.index, 
+                #title='Retained Students by number of Sessions Attended Previous Year',
+                #labels={'names': 'Type'})
 
     # Customize pie chart appearance (optional)
-    figPie.update_traces(textposition='inside', textinfo='percent+label')
-    figPie.update_layout(showlegend=True)
+    #figPie.update_traces(textposition='inside', textinfo='percent+label')
+   # figPie.update_layout(showlegend=True)
 
     # Calculate the retention percentages for each type (Type_8 to Type_1)
-    for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
-        retained_col = f'Type_{student_type} Retained Count Previous'
-        total_col = f'Type_{student_type} Total Count Previous Year'
+    #for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
+        #retained_col = f'Type_{student_type} Retained Count Previous'
+        #total_col = f'Type_{student_type} Total Count Previous Year'
         
         # Calculate the retention percentage (retained / total)
-        retention_df[f'Type_{student_type} Retention'] = retention_df[retained_col] / retention_df[total_col] * 100
+        #retention_df[f'Type_{student_type} Retention'] = retention_df[retained_col] / retention_df[total_col] * 100
 
     # Filter the retention_df based on selected locations
     filtered_retention_df = retention_df[retention_df['Group'].isin(selected_locations)]
 
     # Calculate the retention percentages for each type
-    retention_percentages = {}
-    for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
-        retained_col = f'Type_{student_type} Retained Count Previous'
-        total_col = f'Type_{student_type} Total Count Previous Year'
+    #retention_percentages = {}
+    #for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
+        #retained_col = f'Type_{student_type} Retained Count Previous'
+        #total_col = f'Type_{student_type} Total Count Previous Year'
         
         # Calculate the sum of retained counts and total counts for each type
-        sum_retained = filtered_retention_df[retained_col].sum()
-        sum_total = filtered_retention_df[total_col].sum()
+        #sum_retained = filtered_retention_df[retained_col].sum()
+        #sum_total = filtered_retention_df[total_col].sum()
         
         # Calculate the retention percentage for each type (sum_retained / sum_total)
-        retention_percentages[retained_col] = (sum_retained / sum_total * 100) if sum_total > 0 else 0
+        #retention_percentages[retained_col] = (sum_retained / sum_total * 100) if sum_total > 0 else 0
 
     # Prepare the data for plotting
-    data = pd.DataFrame({
-        'Type': [f'Type_{student_type}' for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']],
-        'Retention Percentage': [retention_percentages[f'Type_{student_type} Retained Count Previous'] for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']]
-    })
+    #data = pd.DataFrame({
+       # 'Type': [f'Type_{student_type}' for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']],
+       # 'Retention Percentage': [retention_percentages[f'Type_{student_type} Retained Count Previous'] for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']]
+   # })
 
     # Plot the bar chart
-    fig = px.bar(data, x='Type', y='Retention Percentage', 
-                title='Retention Percentage by Number of Sessions Attended the Previous Year',
-                labels={'Retention Percentage': 'Retention %'},
-                text='Retention Percentage')
+   # fig = px.bar(data, x='Type', y='Retention Percentage', 
+     #           title='Retention Percentage by Number of Sessions Attended the Previous Year',
+       #         labels={'Retention Percentage': 'Retention %'},
+      #          text='Retention Percentage')
 
     # Customize the appearance of the bar chart
-    fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+   # fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
     # Fix the y-axis scale to properly reflect percentages and remove decimals
+   # fig.update_layout(
+   #     yaxis=dict(range=[0, 100], showgrid=True, ticksuffix='%'),  # Set the y-axis range from 0 to 100%
+   #     title_font=dict(size=16),
+   #     font=dict(size=14)
+#)
+
+    # Create two columns for side-by-side layout
+   # col1, col2 = st.columns(2)
+
+    # Display the bar chart in the first column
+   # with col1:
+  #      st.plotly_chart(fig, use_container_width=True)
+
+    # Display the pie chart in the second column
+  #  with col2:
+  #      st.plotly_chart(figPie, use_container_width=True)
+
+# Sum the total counts for each type
+    total_counts = {
+        'Type_8 Retention Count': filtered_retention_df['Type_8 Retained Count Previous'].sum(),
+        'Type_7 Retention Count': filtered_retention_df['Type_7 Retained Count Previous'].sum(),
+        'Type_6 Retention Count': filtered_retention_df['Type_6 Retained Count Previous'].sum(),
+        'Type_5 Retention Count': filtered_retention_df['Type_5 Retained Count Previous'].sum(),
+        'Type_4 Retention Count': filtered_retention_df['Type_4 Retained Count Previous'].sum(),
+        'Type_3 Retention Count': filtered_retention_df['Type_3 Retained Count Previous'].sum(),
+        'Type_2 Retention Count': filtered_retention_df['Type_2 Retained Count Previous'].sum(),
+        'Type_1 Retention Count': filtered_retention_df['Type_1 Retained Count Previous'].sum(),
+    }
+    # Sum the total counts for each type
+    total_countsPrev = {
+        'Type_8 Retention Count': filtered_retention_df['Type_8 Retained Count Current'].sum(),
+        'Type_7 Retention Count': filtered_retention_df['Type_7 Retained Count Current'].sum(),
+        'Type_6 Retention Count': filtered_retention_df['Type_6 Retained Count Current'].sum(),
+        'Type_5 Retention Count': filtered_retention_df['Type_5 Retained Count Current'].sum(),
+        'Type_4 Retention Count': filtered_retention_df['Type_4 Retained Count Current'].sum(),
+        'Type_3 Retention Count': filtered_retention_df['Type_3 Retained Count Current'].sum(),
+        'Type_2 Retention Count': filtered_retention_df['Type_2 Retained Count Current'].sum(),
+        'Type_1 Retention Count': filtered_retention_df['Type_1 Retained Count Current'].sum(),
+    }
+
+    # Prepare the data for plotting
+    dataCurrent = pd.DataFrame({
+        'Type': list(total_counts.keys()),
+        'Total Count': list(total_counts.values())
+    })
+    # Prepare the data for plotting
+    dataPrevious = pd.DataFrame({
+        'Type': list(total_countsPrev.keys()),
+        'Total Count': list(total_countsPrev.values())
+    })
+
+    # Create the histogram using Plotly
+    figCurrent = px.bar(dataCurrent, x='Type', y='Total Count', 
+                title='Sum of Total Counts by Type',
+                labels={'Total Count': 'Sum of Total Count'},
+                text='Total Count')
+
+    # Customize the appearance of the histogram
+    figCurrent.update_traces(texttemplate='%{text:.0f}', textposition='outside', marker_color = 'green')
+
+    # Center the title, make the font bigger, and center the graph
+    figCurrent.update_layout(
+        title={
+            'text': "Total Unique Student's Type for Current Year",
+            'y': 1,  # Position the title higher
+            'x': 0.5,   # Center the title horizontally
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}  # Increase title font size
+        },
+        yaxis_tickformat='', 
+        width = 1300,
+        margin=dict(l=50, r=50, t=20, b=50),  # Center the entire chart by adjusting margins
+    )
+
+    fig = px.bar(dataPrevious, x='Type', y='Total Count', 
+                title='Sum of Total Counts by Type',
+                labels={'Total Count': 'Sum of Total Count'},
+                text='Total Count')
+
+    # Customize the appearance of the histogram
+    fig.update_traces(texttemplate='%{text:.0f}', textposition='outside', marker_color = 'pink')
+
+    # Center the title, make the font bigger, and center the graph
     fig.update_layout(
-        yaxis=dict(range=[0, 100], showgrid=True, ticksuffix='%'),  # Set the y-axis range from 0 to 100%
-        title_font=dict(size=16),
-        font=dict(size=14)
-)
+        title={
+            'text': "Total Unique Student's Type for Previous Year",
+            'y': 1,  # Position the title higher
+            'x': 0.5,   # Center the title horizontally
+            'xanchor': 'center',
+            'yanchor': 'top',
+            'font': {'size': 20}  # Increase title font size
+        },
+        yaxis_tickformat='', 
+        width = 1300,
+        margin=dict(l=50, r=50, t=20, b=50),  # Center the entire chart by adjusting margins
+    )
 
     # Create two columns for side-by-side layout
     col1, col2 = st.columns(2)
@@ -745,7 +837,7 @@ if not retention_df.empty:
 
     # Display the pie chart in the second column
     with col2:
-        st.plotly_chart(figPie, use_container_width=True)
+        st.plotly_chart(figCurrent, use_container_width=True)
 
     # Sum the total counts for each type
     total_counts = {
@@ -788,7 +880,7 @@ if not retention_df.empty:
                 text='Total Count')
 
     # Customize the appearance of the histogram
-    figCurrent.update_traces(texttemplate='%{text:.0f}', textposition='outside')
+    figCurrent.update_traces(texttemplate='%{text:.0f}', textposition='outside', marker_color = 'green')
 
     # Center the title, make the font bigger, and center the graph
     figCurrent.update_layout(
@@ -811,7 +903,7 @@ if not retention_df.empty:
                 text='Total Count')
 
     # Customize the appearance of the histogram
-    fig.update_traces(texttemplate='%{text:.0f}', textposition='outside')
+    fig.update_traces(texttemplate='%{text:.0f}', textposition='outside', marker_color = 'pink')
 
     # Center the title, make the font bigger, and center the graph
     fig.update_layout(
