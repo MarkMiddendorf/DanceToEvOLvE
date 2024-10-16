@@ -425,7 +425,7 @@ def calculate_retention(df, group_by_cols, start_periods, end_periods):
                 # Convert to dictionaries for easier access
                 retained_type_counts_dict = retained_type_counts.to_dict()
                 total_type_counts_dict = total_type_counts.to_dict()
-                total_type_countsEnd_dict = total_type_counts.to_dict()
+                total_type_countsEnd_dict = total_type_countsEnd.to_dict()
                      
                 # Calculate retention rate
                 retention_rate = retained_count / start_count if start_count > 0 else 0
