@@ -692,14 +692,14 @@ if not retention_df.empty:
      ].sum()
 
     # Create a pie chart for the counts
-     figPie = px.pie(values=type_counts, 
-                 names=type_counts.index, 
-                 title='Retained Students by number of Sessions Attended Previous Year',
-                 labels={'names': 'Type'})
+    figPie = px.pie(values=type_counts, 
+         names=type_counts.index, 
+         title='Retained Students by number of Sessions Attended Previous Year',
+         labels={'names': 'Type'})
 
     #Customize pie chart appearance (optional)
-     figPie.update_traces(textposition='inside', textinfo='percent+label')
-     figPie.update_layout(showlegend=True)
+    figPie.update_traces(textposition='inside', textinfo='percent+label')
+    figPie.update_layout(showlegend=True)
 
     # Calculate the retention percentages for each type (Type_8 to Type_1)
      for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
