@@ -676,7 +676,7 @@ if not retention_df.empty:
         st.markdown(f"<h5 style='text-align: left; margin-left: 0px;'>San Diego Retention: {sandiego_retention_value:.2f}%</h5>", unsafe_allow_html=True)
 
 
-    #Plot Pie Chart
+     #Plot Pie Chart
      #Sum the counts for each type
      type_counts = location_retention_df[['Type_8 Retained Count Previous', 'Type_7 Retained Count Previous', 'Type_6 Retained Count Previous', 'Type_5 Retained Count Previous', 'Type_4 Retained Count Previous', 
                                         'Type_3 Retained Count Previous', 'Type_2 Retained Count Previous', 'Type_1 Retained Count Previous']].sum()
@@ -708,14 +708,14 @@ if not retention_df.empty:
          retained_col = f'Type_{student_type} Retained Count Previous'
          total_col = f'Type_{student_type} Total Count Previous Year'
         
-          Calculate the sum of retained counts and total counts for each type
+         #Calculate the sum of retained counts and total counts for each type
          sum_retained = filtered_retention_df[retained_col].sum()
          sum_total = filtered_retention_df[total_col].sum()
         
-          Calculate the retention percentage for each type (sum_retained / sum_total)
+          #Calculate the retention percentage for each type (sum_retained / sum_total)
          retention_percentages[retained_col] = (sum_retained / sum_total * 100) if sum_total > 0 else 0
 
-      Prepare the data for plotting
+     #Prepare the data for plotting
      data = pd.DataFrame({
          'Type': [f'Type_{student_type}' for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']],
          'Retention Percentage': [retention_percentages[f'Type_{student_type} Retained Count Previous'] for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']]
@@ -729,14 +729,14 @@ if not retention_df.empty:
 
       #Customize the appearance of the bar chart
      fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
-      Fix the y-axis scale to properly reflect percentages and remove decimals
+     #Fix the y-axis scale to properly reflect percentages and remove decimals
      fig.update_layout(
          yaxis=dict(range=[0, 100], showgrid=True, ticksuffix='%'),  # Set the y-axis range from 0 to 100%
          title_font=dict(size=16),
          font=dict(size=14)
  )
 
-     Create two columns for side-by-side layout
+     #Create two columns for side-by-side layout
      col1, col2 = st.columns(2)
 
     # Display the bar chart in the first column
