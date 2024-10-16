@@ -773,7 +773,7 @@ if not retention_df.empty:
         },
         yaxis_tickformat='', 
         width = 1300,
-        margin=dict(l=50, r=50, t=50, b=50),  # Center the entire chart by adjusting margins
+        margin=dict(l=50, r=50, t=0, b=50),  # Center the entire chart by adjusting margins
     )
 
 
