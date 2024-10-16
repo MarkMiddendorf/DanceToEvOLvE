@@ -413,17 +413,20 @@ def calculate_retention(df, group_by_cols, start_periods, end_periods):
                 # Filter for retained students and total students for the start period within the same group
                 retained_student_types = df[(df['DancerID'].isin(retained_students)) & (df['School Year'].isin(end_periods)) & group_condition]
                 total_student_types = df[(df['School Year'].isin(start_periods)) & group_condition]  # Total students for this group
-
+                total_student_typesEnd = df[(df['School Year'].isin(end_periods)) & group_condition]  # Total students for this group
+                     
                 # Count unique student IDs for each type (retained students)
                 retained_type_counts = retained_student_types.groupby(f'Type_{start_periods[0]}')['DancerID'].nunique()
 
                 # Count unique student IDs for each type (total students in start period)
                 total_type_counts = total_student_types.groupby(f'Type_{start_periods[0]}')['DancerID'].nunique()
+                total_type_countsEnd = total_student_types.groupby(f'Type_{end_periods[0]}')['DancerID'].nunique()
 
                 # Convert to dictionaries for easier access
                 retained_type_counts_dict = retained_type_counts.to_dict()
                 total_type_counts_dict = total_type_counts.to_dict()
-
+                total_type_countsEnd_dict = total_type_counts.to_dict()
+                     
                 # Calculate retention rate
                 retention_rate = retained_count / start_count if start_count > 0 else 0
 
@@ -438,7 +441,8 @@ def calculate_retention(df, group_by_cols, start_periods, end_periods):
                 # Add type counts for retained and total students to retention results
                 for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
                     retention_results[group][f'Type_{student_type} Retained Count'] = retained_type_counts_dict.get(f'Type {student_type}', 0)
-                    retention_results[group][f'Type_{student_type} Total Count'] = total_type_counts_dict.get(f'Type {student_type}', 0)
+                    retention_results[group][f'Type_{student_type} Total Count Previous Year'] = total_type_counts_dict.get(f'Type {student_type}', 0)
+                    retention_results[group][f'Type_{student_type} Total Count Current Year'] = total_type_countsEnd_dict.get(f'Type {student_type}', 0)
         
         except Exception as e:
             print(f"Error processing group {group} for school years {start_periods[0]}-{end_periods[0]}: {e}")
@@ -483,14 +487,22 @@ def calculate_school_year_retention(df):
                         'Type_3 Retained Count': data['Type_3 Retained Count'],
                         'Type_2 Retained Count': data['Type_2 Retained Count'],
                         'Type_1 Retained Count': data['Type_1 Retained Count'],
-                        'Type_8 Total Count': data['Type_8 Total Count'],
-                        'Type_7 Total Count': data['Type_7 Total Count'],
-                        'Type_6 Total Count': data['Type_6 Total Count'],
-                        'Type_5 Total Count': data['Type_5 Total Count'],
-                        'Type_4 Total Count': data['Type_4 Total Count'],
-                        'Type_3 Total Count': data['Type_3 Total Count'],
-                        'Type_2 Total Count': data['Type_2 Total Count'],
-                        'Type_1 Total Count': data['Type_1 Total Count'],
+                        'Type_8 Total Count Current Year': data['Type_8 Total Count Current Year'],
+                        'Type_7 Total Count Current Year': data['Type_7 Total Count Current Year'],
+                        'Type_6 Total Count Current Year': data['Type_6 Total Count Current Year'],
+                        'Type_5 Total Count Current Year': data['Type_5 Total Count Current Year'],
+                        'Type_4 Total Count Current Year': data['Type_4 Total Count Current Year'],
+                        'Type_3 Total Count Current Year': data['Type_3 Total Count Current Year'],
+                        'Type_2 Total Count Current Year': data['Type_2 Total Count Current Year'],
+                        'Type_1 Total Count Current Year': data['Type_1 Total Count Current Year'],
+                        'Type_8 Total Count Previous Year': data['Type_8 Total Count Previous Year'],
+                        'Type_7 Total Count Previous Year': data['Type_7 Total Count Previous Year'],
+                        'Type_6 Total Count Previous Year': data['Type_6 Total Count Previous Year'],
+                        'Type_5 Total Count Previous Year': data['Type_5 Total Count Previous Year'],
+                        'Type_4 Total Count Previous Year': data['Type_4 Total Count Previous Year'],
+                        'Type_3 Total Count Previous Year': data['Type_3 Total Count Previous Year'],
+                        'Type_2 Total Count Previous Year': data['Type_2 Total Count Previous Year'],
+                        'Type_1 Total Count Previous Year': data['Type_1 Total Count Previous Year'],
                         'Calculation Type': 'School Year over School Year Retention'
                     })
             except Exception as e:
@@ -669,7 +681,7 @@ if not retention_df.empty:
     # Calculate the retention percentages for each type (Type_8 to Type_1)
     for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
         retained_col = f'Type_{student_type} Retained Count'
-        total_col = f'Type_{student_type} Total Count'
+        total_col = f'Type_{student_type} Total Count Previous Year'
         
         # Calculate the retention percentage (retained / total)
         retention_df[f'Type_{student_type} Retention'] = retention_df[retained_col] / retention_df[total_col] * 100
@@ -681,7 +693,7 @@ if not retention_df.empty:
     retention_percentages = {}
     for student_type in ['8', '7', '6', '5', '4', '3', '2', '1']:
         retained_col = f'Type_{student_type} Retained Count'
-        total_col = f'Type_{student_type} Total Count'
+        total_col = f'Type_{student_type} Total Count Previous Year'
         
         # Calculate the sum of retained counts and total counts for each type
         sum_retained = filtered_retention_df[retained_col].sum()
@@ -724,14 +736,14 @@ if not retention_df.empty:
 
     # Sum the total counts for each type
     total_counts = {
-        'Type_8 Total Count': filtered_retention_df['Type_8 Total Count'].sum(),
-        'Type_7 Total Count': filtered_retention_df['Type_7 Total Count'].sum(),
-        'Type_6 Total Count': filtered_retention_df['Type_6 Total Count'].sum(),
-        'Type_5 Total Count': filtered_retention_df['Type_5 Total Count'].sum(),
-        'Type_4 Total Count': filtered_retention_df['Type_4 Total Count'].sum(),
-        'Type_3 Total Count': filtered_retention_df['Type_3 Total Count'].sum(),
-        'Type_2 Total Count': filtered_retention_df['Type_2 Total Count'].sum(),
-        'Type_1 Total Count': filtered_retention_df['Type_1 Total Count'].sum(),
+        'Type_8 Total Count Current Year': filtered_retention_df['Type_8 Total Count Current Year'].sum(),
+        'Type_7 Total Count Current Year': filtered_retention_df['Type_7 Total Count Current Year'].sum(),
+        'Type_6 Total Count Current Year': filtered_retention_df['Type_6 Total Count Current Year'].sum(),
+        'Type_5 Total Count Current Year': filtered_retention_df['Type_5 Total Count Current Year'].sum(),
+        'Type_4 Total Count Current Year': filtered_retention_df['Type_4 Total Count Current Year'].sum(),
+        'Type_3 Total Count Current Year': filtered_retention_df['Type_3 Total Count Current Year'].sum(),
+        'Type_2 Total Count Current Year': filtered_retention_df['Type_2 Total Count Current Year'].sum(),
+        'Type_1 Total Count Current Year': filtered_retention_df['Type_1 Total Count Current Year'].sum(),
     }
 
     # Prepare the data for plotting
