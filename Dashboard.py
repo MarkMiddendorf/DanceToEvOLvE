@@ -677,8 +677,19 @@ if not retention_df.empty:
 
 
      #Plot Pie Chart
-     #Sum the counts for each type
-     type_counts = location_retention_df[['Type_8 Retained Count Previous', 'Type_7 Retained Count Previous', 'Type_6 Retained Count Previous', 'Type_5 Retained Count Previous', 'Type_4 Retained Count Previous', 'Type_3 Retained Count Previous', 'Type_2 Retained Count Previous', 'Type_1 Retained Count Previous']].sum()
+     # Ensure this indentation level matches the rest of your code
+type_counts = location_retention_df[
+    [
+        'Type_8 Retained Count Previous', 
+        'Type_7 Retained Count Previous', 
+        'Type_6 Retained Count Previous', 
+        'Type_5 Retained Count Previous', 
+        'Type_4 Retained Count Previous', 
+        'Type_3 Retained Count Previous', 
+        'Type_2 Retained Count Previous', 
+        'Type_1 Retained Count Previous'
+    ]
+].sum()
 
     # Create a pie chart for the counts
      figPie = px.pie(values=type_counts, 
