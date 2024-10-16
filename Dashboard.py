@@ -765,7 +765,7 @@ if not retention_df.empty:
     fig.update_layout(
         title={
             'text': 'Sum of Total Counts by Type',
-            'y': 0.95,  # Position the title higher
+            'y': 0,  # Position the title higher
             'x': 0.5,   # Center the title horizontally
             'xanchor': 'center',
             'yanchor': 'top',
