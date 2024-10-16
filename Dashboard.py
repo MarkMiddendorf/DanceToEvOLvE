@@ -790,7 +790,7 @@ if not retention_df.empty:
         },
         yaxis_tickformat='', 
         width = 1300,
-        margin=dict(l=50, r=50, t=10, b=50),  # Center the entire chart by adjusting margins
+        margin=dict(l=50, r=50, t=20, b=50),  # Center the entire chart by adjusting margins
     )
 
     fig = px.bar(dataPrevious, x='Type', y='Total Count', 
@@ -813,7 +813,7 @@ if not retention_df.empty:
         },
         yaxis_tickformat='', 
         width = 1300,
-        margin=dict(l=50, r=50, t=10, b=50),  # Center the entire chart by adjusting margins
+        margin=dict(l=50, r=50, t=20, b=50),  # Center the entire chart by adjusting margins
     )
 
     # Create two columns for side-by-side layout
