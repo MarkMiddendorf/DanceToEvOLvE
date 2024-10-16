@@ -525,6 +525,7 @@ retention_df = df[(df['Class'].isin(selected_classes)) &
 retention_df = classify_students_by_attendance(retention_df)
 
 retentionWithStudentClass_df = retention_df
+st.write(retentionWithStudentClass_df)
 
 # Calculate School Year Retention
 
