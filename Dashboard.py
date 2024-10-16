@@ -737,25 +737,25 @@ if not retention_df.empty:
 
     # Sum the total counts for each type
     total_counts = {
-        'Type_8 Total Count Year': filtered_retention_df['Type_8 Total Count Current Year'].sum(),
-        'Type_7 Total Count Year': filtered_retention_df['Type_7 Total Count Current Year'].sum(),
-        'Type_6 Total Count Year': filtered_retention_df['Type_6 Total Count Current Year'].sum(),
-        'Type_5 Total Count Year': filtered_retention_df['Type_5 Total Count Current Year'].sum(),
-        'Type_4 Total Count Year': filtered_retention_df['Type_4 Total Count Current Year'].sum(),
-        'Type_3 Total Count Year': filtered_retention_df['Type_3 Total Count Current Year'].sum(),
-        'Type_2 Total Count Year': filtered_retention_df['Type_2 Total Count Current Year'].sum(),
-        'Type_1 Total Count Year': filtered_retention_df['Type_1 Total Count Current Year'].sum(),
+        'Type_8 Total Count': filtered_retention_df['Type_8 Total Count Current Year'].sum(),
+        'Type_7 Total Count': filtered_retention_df['Type_7 Total Count Current Year'].sum(),
+        'Type_6 Total Count': filtered_retention_df['Type_6 Total Count Current Year'].sum(),
+        'Type_5 Total Count': filtered_retention_df['Type_5 Total Count Current Year'].sum(),
+        'Type_4 Total Count': filtered_retention_df['Type_4 Total Count Current Year'].sum(),
+        'Type_3 Total Count': filtered_retention_df['Type_3 Total Count Current Year'].sum(),
+        'Type_2 Total Count': filtered_retention_df['Type_2 Total Count Current Year'].sum(),
+        'Type_1 Total Count': filtered_retention_df['Type_1 Total Count Current Year'].sum(),
     }
     # Sum the total counts for each type
     total_countsPrev = {
-        'Type_8 Total Count Year': filtered_retention_df['Type_8 Total Count Previous Year'].sum(),
-        'Type_7 Total Count Year': filtered_retention_df['Type_7 Total Count Previous Year'].sum(),
-        'Type_6 Total Count Year': filtered_retention_df['Type_6 Total Count Previous Year'].sum(),
-        'Type_5 Total Count Year': filtered_retention_df['Type_5 Total Count Previous Year'].sum(),
-        'Type_4 Total Count Year': filtered_retention_df['Type_4 Total Count Previous Year'].sum(),
-        'Type_3 Total Count Year': filtered_retention_df['Type_3 Total Count Previous Year'].sum(),
-        'Type_2 Total Count Year': filtered_retention_df['Type_2 Total Count Previous Year'].sum(),
-        'Type_1 Total Count Year': filtered_retention_df['Type_1 Total Count Previous Year'].sum(),
+        'Type_8 Total Count': filtered_retention_df['Type_8 Total Count Previous Year'].sum(),
+        'Type_7 Total Count': filtered_retention_df['Type_7 Total Count Previous Year'].sum(),
+        'Type_6 Total Count': filtered_retention_df['Type_6 Total Count Previous Year'].sum(),
+        'Type_5 Total Count': filtered_retention_df['Type_5 Total Count Previous Year'].sum(),
+        'Type_4 Total Count': filtered_retention_df['Type_4 Total Count Previous Year'].sum(),
+        'Type_3 Total Count': filtered_retention_df['Type_3 Total Count Previous Year'].sum(),
+        'Type_2 Total Count': filtered_retention_df['Type_2 Total Count Previous Year'].sum(),
+        'Type_1 Total Count': filtered_retention_df['Type_1 Total Count Previous Year'].sum(),
     }
 
     # Prepare the data for plotting
