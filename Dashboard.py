@@ -464,7 +464,7 @@ with tab1:
         # Display total retention percentage for all periods combined, if desired
         total_retained_dancers = retention_df['Retained Dancers'].sum()
         overall_retention_percentage = (retention_df['Retained Dancers'].sum() / retention_df['Number of Unique Dancers'].sum()) * 100
-        st.markdown(f"<h5 style='text-align: left; margin-left: 75px;'>Overall Retention Percentage: {overall_retention_percentage:.0f}%</h5>", unsafe_allow_html=True)
+        #st.markdown(f"<h5 style='text-align: left; margin-left: 75px;'>Overall Retention Percentage: {overall_retention_percentage:.0f}%</h5>", unsafe_allow_html=True)
     else:
         st.warning("No data available for the selected filters.")
 
@@ -1093,6 +1093,6 @@ with tab3:
 
         # Display total dropped dancers count for all teachers
         total_dropped_dancers = retention_df['Drops'].sum()
-        st.markdown(f"<h5 style='text-align: left;'>Total Retained Dancers Dropped: {total_dropped_dancers:.0f}</h5>", unsafe_allow_html=True)
+        #st.markdown(f"<h5 style='text-align: left;'>Total Retained Dancers Dropped: {total_dropped_dancers:.0f}</h5>", unsafe_allow_html=True)
     else:
         st.warning("No data available for the selected filters.")
