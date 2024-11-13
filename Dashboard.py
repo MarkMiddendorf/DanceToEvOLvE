@@ -38,6 +38,7 @@ data = sheet.get_all_records()
 
 # Convert the data to a pandas DataFrame
 df = pd.DataFrame(data)
+
 # Create tabs
 tab1, tab2, tab3= st.tabs(["Dashboard", "Summary Statistics", "Group By"])
 
@@ -605,8 +606,8 @@ with tab1:
                         type_counts, 
                         x='Type', 
                         y='Count', 
-                        title=f'Retained Counts by Type for School Year {previous_year}-{previous_year + 1}',
-                        labels={'Type': 'Type', 'Count': 'Retained Dancer Count'}
+                        title=f'Unique Students by Sessions for School Year {previous_year}-{previous_year + 1}',
+                        labels={'Type': 'Type', 'Count': 'Dancer Count'}
                     )
                     # Add labels above each bar showing the total count
                     fig.update_traces(
@@ -615,8 +616,8 @@ with tab1:
                     )
 
                     fig.update_layout(
-                        xaxis_title="Type",
-                        yaxis_title="Retained Dancer Count",
+                        xaxis_title="Sessions Attended",
+                        yaxis_title="Dancer Count",
                         template='plotly_white',
                         title_x=0.4
                     )
@@ -648,7 +649,7 @@ with tab1:
                 return 'Type 0'
 
         # Example usage in Streamlit
-        st.title("Retention Analysis by School Year")
+        st.title("Unique Students by Number of Sessions")
         SessionCounts_df = classify_students_by_attendance(filtered_df)
 
         # Define summary data for easy access
