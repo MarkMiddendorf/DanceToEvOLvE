@@ -618,7 +618,7 @@ with tab2:
         st.markdown(f"<h5 style='text-align: left;'>Total Unique Students: <b>{summary_data['Total Unique Dancers Enrolled']}</b></h5>", unsafe_allow_html=True)
         st.markdown(f"<h5 style='text-align: left;'>Total Retained Students: <b>{summary_data['Total Retained Dancers']}</b></h5>", unsafe_allow_html=True)
         st.markdown(f"<h5 style='text-align: left;'>Total Dropped Students: <b>{summary_data['Total Dropped Dancers']}</b></h5>", unsafe_allow_html=True)
-        st.markdown(f"<h5 style='text-align: left;'>Percent of Brand New Students: <b>{summary_data['Acquisition Ratio']}</b></h5>", unsafe_allow_html=True)
+        st.markdown(f"<h5 style='text-align: left;'>Brand New Students (Acquisition %): <b>{summary_data['Acquisition Ratio']}</b></h5>", unsafe_allow_html=True)
         st.markdown(f"<h5 style='text-align: left;'>Percent of Students Retained: <b>{summary_data['Retention Ratio']}</b></h5>", unsafe_allow_html=True)
 
         def classify_students_by_attendance(df):
