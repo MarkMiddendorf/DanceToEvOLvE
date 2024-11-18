@@ -123,7 +123,7 @@ with tab1:
     df = addSchoolYear(df)
 
     # Convert School Year and Session to integers (if they are not strings)
-    df['School Year'] = df['School Year'].fillna(0).astype(int)
+    df['School Year'] = df['School Year'].astype(int)
 
     df['Session'] = df['Session'].astype(int)
 
