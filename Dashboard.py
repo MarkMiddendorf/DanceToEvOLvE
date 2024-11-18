@@ -621,6 +621,7 @@ with tab2:
         st.markdown(f"<h5 style='text-align: left;'>Brand New Students (Acquisition %): <b>{summary_data['Acquisition Ratio']}</b></h5>", unsafe_allow_html=True)
         st.markdown(f"<h5 style='text-align: left;'>Percent of Students Retained: <b>{summary_data['Retention Ratio']}</b></h5>", unsafe_allow_html=True)
 
+        # Function to classify students by attendance and create histograms
         def classify_students_by_attendance(df):
             # Set custom thresholds for each type
             thresholds = {
@@ -643,6 +644,9 @@ with tab2:
             years = sorted(df['School Year'].unique())
             years = [int(year) for year in years]
 
+            # Define the correct order for "Took" categories
+            took_order = ['Took 0', 'Took 1', 'Took 2', 'Took 3', 'Took 4', 'Took 5', 'Took 6', 'Took 7', 'Took 8']
+
             for year in years:
                 previous_year_attendance = attendance_counts[attendance_counts['School Year'] == year].copy()
 
@@ -661,6 +665,10 @@ with tab2:
                 type_counts.columns = ['Took', 'Count']
                 total_count = type_counts['Count'].sum()
                 type_counts['Percentage'] = (type_counts['Count'] / total_count) * 100  # Calculate percentages
+
+                # Ensure "Took" is ordered correctly
+                type_counts['Took'] = pd.Categorical(type_counts['Took'], categories=took_order, ordered=True)
+                type_counts = type_counts.sort_values('Took')
 
                 # Create the histogram with Plotly
                 fig = px.bar(
@@ -683,7 +691,8 @@ with tab2:
                     yaxis_title="Percentage of Total (%)",
                     template='plotly_white',
                     title_x=0.4,
-                    margin=dict(t=80)
+                    margin=dict(t=80),
+                    xaxis=dict(categoryorder='array', categoryarray=took_order)  # Ensure correct order
                 )
 
                 # Display the figure in Streamlit
@@ -1125,4 +1134,3 @@ with tab3:
         #st.markdown(f"<h5 style='text-align: left;'>Total Retained Dancers Dropped: {total_dropped_dancers:.0f}</h5>", unsafe_allow_html=True)
     else:
         st.warning("No data available for the selected filters.")
-
