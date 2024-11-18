@@ -675,7 +675,7 @@ with tab2:
                     type_counts, 
                     x='Took', 
                     y='Percentage',  # Use percentage for the y-axis
-                    title=f'Unique Students by Sessions for School Year {year}-{year + 1}',
+                    title=f'How many Sessions each unique Student Took {year}-{year + 1}',
                     labels={'Took': 'Sessions Took', 'Percentage': 'Percentage of Total (%)'}
                 )
 
