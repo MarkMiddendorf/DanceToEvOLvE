@@ -148,6 +148,8 @@ with tab1:
         df['x_axisLabel'] = df['Year_Season_Session']
         df['Sort_Key'] = df['School Year'] * 100 + df['Season_Order'] * 10 + df['Session']
 
+    df['Sort_Key_Session'] = df['School Year'] * 100 + df['Season_Order'] * 10 + df['Session']  # Session-based sort key
+    df['x_axisLabelSession'] = df['Year_Season_Session']
 
     # Sort the DataFrame
     df = df.sort_values('Sort_Key')
@@ -484,6 +486,14 @@ with tab1:
         st.markdown(f"<h5 style='text-align: left; margin-left: 75px;'>Drops: Unique Students (previous period) - Retained Students (current period)</h5>", unsafe_allow_html=True)
     # PERCENT CHANGE
         drops_df = drops_df.merge(new_students_drops_df, on='Year_Season_Session', how='left')
+
+        drops_df['x_axisLabelSession'] = drops_df['Year_Season_Session']
+
+        drops_df = drops_df.merge(df[['x_axisLabelSession', 'Sort_Key_Session']].drop_duplicates(), on='x_axisLabelSession')
+
+        drops_df = drops_df.sort_values('Sort_Key_Session')
+
+
         drops_df['Retained Students'] = drops_df['Number of Unique Dancers'] - drops_df['Number of New Students']
 
         # Ensure unique enrollment data is sorted correctly and includes a shifted column for previous period's unique dancers
@@ -491,9 +501,6 @@ with tab1:
 
         # Calculate Drops as the difference between Previous Period Unique Dancers and current period's Retained Dancers
         drops_df['Drops'] = drops_df['Previous Period Unique Dancers'] - drops_df['Retained Students']
-
-        # Ensure no negative values; replace negative Drops with zero
-        #retention_df['Drops'] = retention_df['Drops'].clip(lower=0)
 
         if display_toggle == "School Year":
             # Aggregate data by School Year
@@ -504,6 +511,7 @@ with tab1:
         else:
             # Use Year_Season_Session for the x-axis
             drops_df['x_axisLabel'] = drops_df['Year_Season_Session']
+
 
         # Calculate the percentage change in drops
         drops_df['Drop %'] = drops_df['Drops'].pct_change().fillna(0) * 100
