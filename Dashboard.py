@@ -5,14 +5,42 @@ import plotly.graph_objects as go  # Import Plotly graph objects
 import os
 from datetime import datetime
 import re
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
+# Set up Streamlit page config
 st.set_page_config(layout="wide")
 
-# Define the file path
-file_path = '/Users/markmiddendorf/Desktop/INTL BUS/DanceToEvOLve/StreamlitFinal/DanceData.xlsx'
+# Define the scope for accessing Google Sheets
+scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
+         "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
 
-# Load the Excel file into a DataFrame
-df = pd.read_excel(file_path)
+# Load credentials from Streamlit secrets
+creds_dict = {
+    "type": st.secrets["type"],
+    "project_id": st.secrets["project_id"],
+    "private_key_id": st.secrets["private_key_id"],
+    "private_key": st.secrets["private_key"].replace("\\n", "\n"),  # replace escaped newlines
+    "client_email": st.secrets["client_email"],
+    "client_id": st.secrets["client_id"],
+    "auth_uri": st.secrets["auth_uri"],
+    "token_uri": st.secrets["token_uri"],
+    "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
+    "client_x509_cert_url": st.secrets["client_x509_cert_url"]
+}
+
+# Authorize the client using credentials
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+client = gspread.authorize(creds)
+
+# Open Google Sheet by name or URL
+sheet = client.open("DanceToEvolve_Data").worksheet("Data")
+
+# Get data from Google Sheet
+data = sheet.get_all_records()
+
+# Convert the data to a pandas DataFrame
+df = pd.DataFrame(data)
 
 # Create tabs
 tab1, tab2, tab3, tab4 = st.tabs(["Dashboard", "Summary Statistics", "Group By", "Format Data"])
