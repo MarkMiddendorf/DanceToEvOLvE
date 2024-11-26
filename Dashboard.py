@@ -1,46 +1,21 @@
 import streamlit as st
 import pandas as pd
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 import plotly.express as px
 import plotly.graph_objects as go  # Import Plotly graph objects
+import os
+from datetime import datetime
+import re
 
-# Set up Streamlit page config
 st.set_page_config(layout="wide")
 
-# Define the scope for accessing Google Sheets
-scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
-         "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+# Define the file path
+file_path = '/Users/markmiddendorf/Desktop/INTL BUS/DanceToEvOLve/StreamlitFinal/DanceData.xlsx'
 
-# Load credentials from Streamlit secrets
-creds_dict = {
-    "type": st.secrets["type"],
-    "project_id": st.secrets["project_id"],
-    "private_key_id": st.secrets["private_key_id"],
-    "private_key": st.secrets["private_key"].replace("\\n", "\n"),  # replace escaped newlines
-    "client_email": st.secrets["client_email"],
-    "client_id": st.secrets["client_id"],
-    "auth_uri": st.secrets["auth_uri"],
-    "token_uri": st.secrets["token_uri"],
-    "auth_provider_x509_cert_url": st.secrets["auth_provider_x509_cert_url"],
-    "client_x509_cert_url": st.secrets["client_x509_cert_url"]
-}
-
-# Authorize the client using credentials
-creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-client = gspread.authorize(creds)
-
-# Open Google Sheet by name or URL
-sheet = client.open("DanceToEvolve_Data").worksheet("Data")
-
-# Get data from Google Sheet
-data = sheet.get_all_records()
-
-# Convert the data to a pandas DataFrame
-df = pd.DataFrame(data)
+# Load the Excel file into a DataFrame
+df = pd.read_excel(file_path)
 
 # Create tabs
-tab1, tab2, tab3= st.tabs(["Dashboard", "Summary Statistics", "Group By"])
+tab1, tab2, tab3, tab4 = st.tabs(["Dashboard", "Summary Statistics", "Group By", "Format Data"])
 
 # Tab 1: Dashboard
 with tab1:
@@ -203,6 +178,7 @@ with tab1:
                     (df['Reg/NonReg'].isin(selected_reg_nonreg)) &
                     (df['School Year'].isin(selected_school_years)) &
                     (df['Season'].isin(selected_seasons)) &
+                    (df['City'].isin(selected_cities)) &
                     (df['Session'].isin(selected_sessions))]
 
     # Initialize total_dancers
@@ -258,6 +234,7 @@ with tab1:
         unique_enrollment_df = filtered_df.groupby(['Year_Season_Session', 'School Year String']).agg({'DancerID': 'nunique'}).reset_index()
         unique_enrollment_df.rename(columns={'DancerID': 'Number of Unique Dancers'}, inplace=True)
         drops_df = unique_enrollment_df
+
 
         # Determine x_axisLabel based on toggle
         if display_toggle == "School Year":
@@ -493,7 +470,6 @@ with tab1:
 
         drops_df = drops_df.sort_values('Sort_Key_Session')
 
-
         drops_df['Retained Students'] = drops_df['Number of Unique Dancers'] - drops_df['Number of New Students']
 
         # Ensure unique enrollment data is sorted correctly and includes a shifted column for previous period's unique dancers
@@ -501,6 +477,8 @@ with tab1:
 
         # Calculate Drops as the difference between Previous Period Unique Dancers and current period's Retained Dancers
         drops_df['Drops'] = drops_df['Previous Period Unique Dancers'] - drops_df['Retained Students']
+
+        st.write(drops_df)
 
         if display_toggle == "School Year":
             # Aggregate data by School Year
@@ -644,8 +622,13 @@ with tab2:
                 'Took_0': 0,
             }
 
-            # Create a DataFrame to hold the attendance counts
-            attendance_counts = df.groupby(['School Year', 'Season', 'Session', 'DancerID']).size().reset_index(name='Count')
+            # Remove duplicates for the same student in the same 'School Year', 'Season', and 'Session'
+            df_unique = df.drop_duplicates(subset=['School Year', 'Season', 'Session', 'DancerID'])
+
+            # Group by 'School Year', 'Season', 'Session', and 'DancerID', and count occurrences
+            attendance_counts = df_unique.groupby(['School Year', 'Season', 'Session', 'DancerID']).size().reset_index(name='Count')
+
+            # Ensure 'School Year' is of integer type
             attendance_counts['School Year'] = attendance_counts['School Year'].astype(int)
 
             # Loop through each school year in the DataFrame
@@ -739,406 +722,649 @@ with tab2:
 with tab3:
     # Add Display toggle
     # Define the display toggle in Streamlit and set groupbyVar based on the selection
-    display_toggle = st.radio("Display", options=["Teacher", "City", "Location", "Class"], index=0)
-    groupbyVar = display_toggle
+    display_toggleVar = st.radio("Display", options=["City", "Teacher", "Location", "Class"], index=0)
+    groupbyVar = display_toggleVar
 
-    # DANCER ENROLLMENT GRAPH
-    st.markdown("<h5 style='text-align: left;'>Dancer Enrollment (Total Slots)</h5>", unsafe_allow_html=True)
+# STUDENT ENROLLMENT GRAPH
+    st.markdown("<h5 style='text-align: left;'></h5>", unsafe_allow_html=True)
+
     if not filtered_df.empty:
-        # Group by x_axisLabel and Teacher to get individual counts per teacher
-        grouped_df = filtered_df.groupby(['x_axisLabel', groupbyVar]).agg({'DancerID': 'count'}).reset_index()
+        # Grouping by x_axisLabel and groupbyVar, counting unique DancerID
+        grouped_df = (
+            filtered_df.groupby(['x_axisLabel', groupbyVar])
+            .agg({'DancerID': 'count'})
+            .reset_index()
+        )
         grouped_df.rename(columns={'DancerID': 'Number of Dancers'}, inplace=True)
-        grouped_df = grouped_df.merge(df[['x_axisLabel', 'Sort_Key']].drop_duplicates(), on='x_axisLabel')
+
+        # Generate a complete grid of all combinations of x_axisLabel and groupbyVar
+        unique_x_axis = grouped_df['x_axisLabel'].unique()
+        unique_groupby_values = filtered_df[groupbyVar].unique()
+        complete_grid = pd.MultiIndex.from_product([unique_x_axis, unique_groupby_values], names=['x_axisLabel', groupbyVar]).to_frame(index=False)
+
+        # Merge the complete grid with the grouped data
+        grouped_df = complete_grid.merge(grouped_df, on=['x_axisLabel', groupbyVar], how='left')
+
+        # Merge with Sort_Key for sorting purposes
+        grouped_df = grouped_df.merge(
+            df[['x_axisLabel', 'Sort_Key']].drop_duplicates(),
+            on='x_axisLabel'
+        )
         grouped_df = grouped_df.sort_values('Sort_Key')
 
-        # Plotting dynamic graph with each teacher as a separate line
-        fig = px.line(grouped_df, x='x_axisLabel', y='Number of Dancers', color= groupbyVar, markers=True, 
-                    title='Dancer Enrollment (Total Slots)')
-        
-        fig.update_traces(marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
-                        line=dict(width=3))
-
-        fig.update_layout(
-            xaxis_title="Time Period",
-            yaxis_title="Dancers Enrolled",
-            xaxis_tickangle=-45,
-            template='plotly_white',
-            font=dict(size=14, color='black'),
-            title_font=dict(size=24, color='white'),
-            title_x=0.4,
-            xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            plot_bgcolor='rgba(0,0,0,0)',
-            hovermode='x unified'
-        )
-
-        # Optional: Add annotations if desired for each data point
-        for i, row in grouped_df.iterrows():
-            fig.add_annotation(
-                x=row['x_axisLabel'],
-                y=row['Number of Dancers'],
-                text=str(row['Number of Dancers']),
-                showarrow=False,
-                xanchor='left',
-                yanchor='middle',
-                xshift=10,
-                font=dict(color='white', weight='bold')
-            )
-
-        st.plotly_chart(fig, use_container_width=True)
+        # Total dancers calculation
         total_dancers = grouped_df['Number of Dancers'].sum()
-        st.markdown(f"<h5 style='text-align: left; margin-left: 75px;'>Total Enrollment (Slots): {total_dancers}</h5>", unsafe_allow_html=True)
-    else:
-        st.warning("No data available for the selected filters.")
-    #Unique Dancers
-    # Display Header for the Chart
-    st.markdown("<h5 style='text-align: left;'>Total Unique Dancers</h5>", unsafe_allow_html=True)
 
-    if not filtered_df.empty:
-        # Count unique DancerIDs for each Year_Season_Session
-        unique_enrollment_df = filtered_df.groupby(['x_axisLabel', groupbyVar]).agg({'DancerID': 'nunique'}).reset_index()
-        unique_enrollment_df.rename(columns={'DancerID': 'Number of Unique Dancers'}, inplace=True)
+        # Plotting dynamic graph
+        fig = px.line(
+            grouped_df,
+            x='x_axisLabel',
+            y='Number of Dancers',
+            color=groupbyVar,  # Differentiate lines by groupbyVar
+            markers=True,
+            title='Student Enrollment (Total Slots Filled)'
+        )
 
-        # Merge to retain Sort_Key for correct ordering and sort
-        unique_enrollment_df = unique_enrollment_df.merge(df[['x_axisLabel', 'Sort_Key']].drop_duplicates(), on='x_axisLabel')
-        unique_enrollment_df = unique_enrollment_df.sort_values('Sort_Key')
-
-        # Calculate total enrollment across all sessions
-        total_unique_dancers = unique_enrollment_df['Number of Unique Dancers'].sum()
-
-        # Plotting the dynamic graph
-        fig = px.line(unique_enrollment_df, x='x_axisLabel', y='Number of Unique Dancers', color = groupbyVar,markers=True, 
-                    title='Total Unique Dancers')
-        
-        fig.update_traces(marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
-                        line=dict(width=3))
+        fig.update_traces(
+            connectgaps=True,
+            marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
+            line=dict(width=3)
+        )
 
         fig.update_layout(
             xaxis_title="Time Period",
-            yaxis_title="Unique Dancers Enrolled",
+            yaxis_title="Students Enrolled",
             xaxis_tickangle=-45,
             template='plotly_white',
             font=dict(size=14, color='black'),
             title_font=dict(size=24, color='white'),
-            title_x=0.4,
+            title_x=0.38,
             xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
             yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
             plot_bgcolor='rgba(0,0,0,0)',
             hovermode='x unified'
         )
 
-        # Add annotations to each point in the graph
-        for _, row in unique_enrollment_df.iterrows():
-            fig.add_annotation(
-                x=row['x_axisLabel'],
-                y=row['Number of Unique Dancers'],
-                text=str(row['Number of Unique Dancers']),
-                showarrow=False,
-                xanchor='left',
-                yanchor='middle',
-                xshift=10,
-                font=dict(color='white', weight='bold')
-            )
+        # Adding annotations for each data point
+        for i, row in grouped_df.iterrows():
+            if not pd.isna(row['Number of Dancers']):  # Avoid annotating missing points
+                fig.add_annotation(
+                    x=row['x_axisLabel'],
+                    y=row['Number of Dancers'],
+                    text=f"{int(row['Number of Dancers'])}",  # Format as an integer
+                    showarrow=False,
+                    xanchor='left',
+                    yanchor='middle',
+                    xshift=10,
+                    font=dict(color='white', weight='bold')
+                )
 
-        # Display the plot in Streamlit
         st.plotly_chart(fig, use_container_width=True)
+        st.markdown(
+            f"<h5 style='text-align: left; margin-left: 75px;'>Total Slots Filled: {int(total_dancers)}</h5>",
+            unsafe_allow_html=True
+        )
+# UNIQUE DANCERS
+    # Grouping by Year_Season_Session, School Year String, and groupbyVar
+    unique_enrollment_df = (
+        filtered_df.groupby(['Year_Season_Session', 'School Year String', groupbyVar])
+        .agg({'DancerID': 'nunique'})
+        .reset_index()
+    )
+    unique_enrollment_df.rename(columns={'DancerID': 'Number of Unique Dancers'}, inplace=True)
+    drops_df = unique_enrollment_df
 
-        # Display total unique dancers enrolled
-        st.markdown(f"<h5 style='text-align: left; margin-left: 75px;'>Total Unique Dancers Enrolled: {total_unique_dancers}</h5>", unsafe_allow_html=True)
+    # Generate a complete grid of all combinations of x_axisLabel and groupbyVar
+    if display_toggle == "School Year":
+        # Rename 'School Year String' to x_axisLabel
+        unique_enrollment_df['x_axisLabel'] = unique_enrollment_df['School Year String'].astype(str)
+        unique_x_axis = unique_enrollment_df['x_axisLabel'].unique()
+    else:
+        # Rename 'Year_Season_Session' to x_axisLabel
+        unique_enrollment_df['x_axisLabel'] = unique_enrollment_df['Year_Season_Session']
+        unique_x_axis = unique_enrollment_df['x_axisLabel'].unique()
 
-    # Dropped Dancers - Percentage Change from Previous Period
-    if not filtered_df.empty: 
-        # Calculate the percentage change in unique dancers from the previous period
-        unique_enrollment_df['Drop %'] = unique_enrollment_df.groupby(groupbyVar)['Number of Unique Dancers'].pct_change().fillna(0) * 100
+    unique_groupby_values = filtered_df[groupbyVar].unique()
 
-        # Plot the percentage drops graph
-        fig_drops = px.line(unique_enrollment_df, x='x_axisLabel', y='Drop %', markers=True, color = groupbyVar,
-                            title='Percentage Change in Unique Dancers')
-        
-        fig_drops.update_traces(marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
-                                line=dict(width=3))
+    # Create a DataFrame with all combinations of x_axisLabel and groupbyVar
+    complete_grid = pd.MultiIndex.from_product([unique_x_axis, unique_groupby_values], names=['x_axisLabel', groupbyVar]).to_frame(index=False)
 
-        fig_drops.update_layout(
-            xaxis_title="Time Period",
-            yaxis_title="Percentage Change in Unique Dancers",
-            xaxis_tickangle=-45,
-            template='plotly_white',
-            font=dict(size=14, color='black'),
-            title_font=dict(size=24, color='white'),
-            title_x=0.3,
-            xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            plot_bgcolor='rgba(0,0,0,0)',
-            hovermode='x unified'
+    # Merge the complete grid with the grouped data
+    unique_enrollment_df = complete_grid.merge(unique_enrollment_df, on=['x_axisLabel', groupbyVar], how='left')
+
+    # Merge to retain Sort_Key for correct ordering and sort
+    unique_enrollment_df = unique_enrollment_df.merge(
+        df[['x_axisLabel', 'Sort_Key']].drop_duplicates(),
+        on='x_axisLabel'
+    )
+    unique_enrollment_df = unique_enrollment_df.sort_values('Sort_Key')
+
+    # Calculate total enrollment across all sessions
+    total_unique_dancers = unique_enrollment_df['Number of Unique Dancers'].sum()
+
+# BRAND NEW STUDENTS
+    # Sort the DataFrame for consistent processing
+    df_sorted = df.sort_values('Year_Season_Session')
+
+    # Identify brand new students
+    seen_dancers = set()
+    newly_acquired = []
+
+    for _, row in df_sorted.iterrows():
+        session_id = row['Year_Season_Session']  # Always use Year_Season_Session as base
+        dancer_id = row['DancerID']
+        if dancer_id not in seen_dancers:
+            newly_acquired.append({
+                'Year_Season_Session': session_id,
+                'School Year String': row['School Year String'],
+                'DancerID': dancer_id,
+                'Class': row['Class'],
+                'Location': row['Location'],
+                'Teacher': row['Teacher'],
+                'Age': row['Age'],
+                'Reg/NonReg': row['Reg/NonReg'],
+                'City': row['City']
+            })
+            seen_dancers.add(dancer_id)
+
+    # Create a DataFrame for newly acquired students
+    acquired_df = pd.DataFrame(newly_acquired)
+
+    # Apply filters for selected attributes
+    acquired_filtered_df = acquired_df[
+        (acquired_df['Class'].isin(selected_classes)) &
+        (acquired_df['Location'].isin(selected_locations)) &
+        (acquired_df['Teacher'].isin(selected_teachers)) &
+        (acquired_df['Age'].isin(selected_ages)) &
+        (acquired_df['Reg/NonReg'].isin(selected_reg_nonreg)) &
+        (acquired_df['City'].isin(selected_cities)) &
+        (acquired_df['Year_Season_Session'].isin(filtered_df['Year_Season_Session']))
+    ]
+
+    # Count new dancers at the Year_Season_Session, School Year String, and groupbyVar levels
+    new_students_df = (
+        acquired_filtered_df.groupby(['Year_Season_Session', 'School Year String', groupbyVar])
+        .agg({'DancerID': 'nunique'})
+        .reset_index()
+    )
+    new_students_df.rename(columns={'DancerID': 'Number of New Students'}, inplace=True)
+
+    new_students_drops_df = new_students_df
+
+    # Generate a complete grid of all combinations of x_axisLabel and groupbyVar
+    if display_toggle == "School Year":
+        # Rename 'School Year String' to x_axisLabel
+        new_students_df['x_axisLabel'] = new_students_df['School Year String'].astype(str)
+        unique_x_axis = new_students_df['x_axisLabel'].unique()
+    else:
+        # Rename 'Year_Season_Session' to x_axisLabel
+        new_students_df['x_axisLabel'] = new_students_df['Year_Season_Session']
+        unique_x_axis = new_students_df['x_axisLabel'].unique()
+
+    unique_groupby_values = filtered_df[groupbyVar].unique()
+
+    # Create a DataFrame with all combinations of x_axisLabel and groupbyVar
+    complete_grid = pd.MultiIndex.from_product([unique_x_axis, unique_groupby_values], names=['x_axisLabel', groupbyVar]).to_frame(index=False)
+
+    # Merge the complete grid with the grouped data
+    new_students_df = complete_grid.merge(new_students_df, on=['x_axisLabel', groupbyVar], how='left')
+
+    # Merge to retain Sort_Key for correct ordering and sort
+    new_students_df = new_students_df.merge(
+        df[['x_axisLabel', 'Sort_Key']].drop_duplicates(),
+        on='x_axisLabel'
+    )
+    new_students_df = new_students_df.sort_values('Sort_Key')
+
+    # Calculate total new students
+    total_new_students = new_students_df['Number of New Students'].sum()
+
+    # Merge to calculate acquisition as a percentage
+    acquisition_percentage_df = new_students_df.merge(unique_enrollment_df, on=['x_axisLabel', groupbyVar])
+    acquisition_percentage_df['Acquisition %'] = (
+        acquisition_percentage_df['Number of New Students'] /
+        acquisition_percentage_df['Number of Unique Dancers']
+    ) * 100
+
+    # Plot graph for Brand New Students Acquisition Percentage
+    fig_new_students = px.line(
+        acquisition_percentage_df,
+        x='x_axisLabel',
+        y='Acquisition %',
+        color=groupbyVar,  # Differentiate lines by groupbyVar
+        markers=True,
+        title='Brand New Students (Acquisition Percentage)'
+    )
+
+    fig_new_students.update_traces(
+        connectgaps=True,
+        marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
+        line=dict(width=3)
+    )
+
+    fig_new_students.update_layout(
+        xaxis_title="Time Period",
+        yaxis_title="Acquisition Percentage (%)",
+        xaxis_tickangle=-45,
+        template='plotly_white',
+        font=dict(size=14, color='black'),
+        title_font=dict(size=24, color='white'),
+        title_x=0.38,
+        xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        plot_bgcolor='rgba(0,0,0,0)',
+        hovermode='x unified'
+    )
+
+    # Add annotations to each point with percentage and total new students
+    for _, row in acquisition_percentage_df.iterrows():
+        fig_new_students.add_annotation(
+            x=row['x_axisLabel'],
+            y=row['Acquisition %'],
+            text=f"{row['Acquisition %']:.0f}% ({int(row['Number of New Students']) if not pd.isna(row['Number of New Students']) else 'N/A'})",
+            showarrow=False,
+            xanchor='left',
+            yanchor='middle',
+            xshift=10,
+            font=dict(color='white', weight='bold')
         )
 
-        # Add annotations to each point in the graph
-        for _, row in unique_enrollment_df.iterrows():
-            fig_drops.add_annotation(
-                x=row['x_axisLabel'],
-                y=row['Drop %'],
-                text=f"{row['Drop %']:.0f}%", 
-                showarrow=False,
-                xanchor='left',
-                yanchor='middle',
-                xshift=10,
-                font=dict(color='white', weight='bold')
-            )
+    # Display the plot in Streamlit
+    st.plotly_chart(fig_new_students, use_container_width=True)
 
-        # Display the drops plot in Streamlit
-        st.plotly_chart(fig_drops, use_container_width=True)
+    # Display total new students
+    total_new_students = acquisition_percentage_df['Number of New Students'].sum()
+    st.markdown(
+        f"<h5 style='text-align: left; margin-left: 75px;'>Total Brand New Students: {int(total_new_students)}</h5>",
+        unsafe_allow_html=True
+    )
+# UNIQUE STUDENTS GRAPH
+    # Group by x_axisLabel and groupbyVar
+    grouped_unique_enrollment_df = (
+        unique_enrollment_df.groupby(['x_axisLabel', groupbyVar], as_index=False)
+        .agg({'Number of Unique Dancers': 'sum'})
+    )
 
-        # Calculate total dropped dancers and dropped percentage
-        unique_enrollment_df['Drops'] = unique_enrollment_df['Number of Unique Dancers'].diff().fillna(0)
-        total_dropped_dancers = unique_enrollment_df['Drops'].sum()
+    # Plotting the dynamic graph
+    fig = px.line(
+        grouped_unique_enrollment_df,
+        x='x_axisLabel',
+        y='Number of Unique Dancers',
+        color=groupbyVar,  # Differentiate lines by groupbyVar
+        markers=True,
+        title='Total Unique Students'
+    )
 
-        st.markdown(f"<h5 style='text-align: left;'>Total Unique Students Dropped: {total_dropped_dancers:.0f}</h5>", unsafe_allow_html=True)
-    else:
-        st.warning("No data available for the selected filters.")
+    fig.update_traces(
+        connectgaps = True,
+        marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
+        line=dict(width=3)
+    )
 
-    # DANCER ACQUISITION GRAPH
-    st.markdown("<h5 style='text-align: left;'>Brand New Dancers as % of Unique Dancers</h5>", unsafe_allow_html=True)
-    if not filtered_df.empty:
-        df_sorted = df.sort_values('Sort_Key')
-        seen_dancers = set()
-        newly_acquired = []
-        for _, row in df_sorted.iterrows():
-            session_id = row['x_axisLabel']
-            dancer_id = row['DancerID']
-            if dancer_id not in seen_dancers:
-                newly_acquired.append({'x_axisLabel': session_id, 'DancerID': dancer_id, 
-                                    'Class': row['Class'], 'Location': row['Location'], 
-                                    'Teacher': row['Teacher'], 'Age': row['Age'], 'City': row['City'],
-                                    'Reg/NonReg': row['Reg/NonReg']})
-                seen_dancers.add(dancer_id)
+    fig.update_layout(
+        xaxis_title="Time Period",
+        yaxis_title="Unique Students Enrolled",
+        xaxis_tickangle=-45,
+        template='plotly_white',
+        font=dict(size=14, color='black'),
+        title_font=dict(size=24, color='white'),
+        title_x=0.44,
+        xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        plot_bgcolor='rgba(0,0,0,0)',
+        hovermode='x unified'
+    )
 
-        acquired_df = pd.DataFrame(newly_acquired)
-        acquired_filtered_df = acquired_df[
-            (acquired_df['Class'].isin(selected_classes)) &
-            (acquired_df['Location'].isin(selected_locations)) &
-            (acquired_df['Teacher'].isin(selected_teachers)) &
-            (acquired_df['Age'].isin(selected_ages)) &
-            (acquired_df['Reg/NonReg'].isin(selected_reg_nonreg)) &
-            (acquired_df['City'].isin(filtered_df['City'])) &
-            (acquired_df['x_axisLabel'].isin(filtered_df['x_axisLabel']))
-        ]
-
-        #Group by x_axisLabel to get count of newly acquired dancers
-        acquired_grouped_filtered_df = acquired_filtered_df.groupby(['x_axisLabel', groupbyVar]).agg({'DancerID': 'count'}).reset_index()
-        acquired_grouped_filtered_df.rename(columns={'DancerID': 'Newly Acquired Students'}, inplace=True)
-        acquired_grouped_filtered_df = acquired_grouped_filtered_df.merge(df[['x_axisLabel', 'Sort_Key']].drop_duplicates(), on='x_axisLabel')
-        acquired_grouped_filtered_df = acquired_grouped_filtered_df.sort_values('Sort_Key')
-
-        # Calculate unique dancers for each period
-        unique_dancers_df = filtered_df.groupby(['x_axisLabel', groupbyVar]).agg({'DancerID': 'nunique'}).reset_index()
-        unique_dancers_df.rename(columns={'DancerID': 'Total Unique Dancers'}, inplace=True)
-
-        # Merge to calculate acquisition as a percentage
-        acquisition_percentage_df = acquired_grouped_filtered_df.merge(unique_dancers_df, on=['x_axisLabel', groupbyVar])
-        acquisition_percentage_df['Acquisition %'] = (acquisition_percentage_df['Newly Acquired Students'] / 
-                                                    acquisition_percentage_df['Total Unique Dancers']) * 100
-
-        # Plot graph
-        fig_acquired_filtered = px.line(acquisition_percentage_df, x='x_axisLabel', y='Acquisition %', color = groupbyVar, markers=True, 
-                                        title='Brand New Dancers as % of Unique Dancers')
-        
-        fig_acquired_filtered.update_traces(marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
-                                            line=dict(width=3))
-
-        fig_acquired_filtered.update_layout(
-            xaxis_title="Time Period",
-            yaxis_title="Brand New Percentage",
-            xaxis_tickangle=-45,
-            template='plotly_white',
-            font=dict(size=14, color='black'),
-            title_font=dict(size=24, color='white'),
-            title_x=0.28,
-            xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            plot_bgcolor='rgba(0,0,0,0)',
-            hovermode='x unified'
+    # Add annotations to each point in the graph
+    for _, row in grouped_unique_enrollment_df.iterrows():
+        fig.add_annotation(
+            x=row['x_axisLabel'],
+            y=row['Number of Unique Dancers'],
+            text=int(row['Number of Unique Dancers']),
+            showarrow=False,
+            xanchor='left',
+            yanchor='middle',
+            xshift=10,
+            font=dict(color='white', weight='bold')
         )
 
-        # Optional: Add annotations for each point
-        for i, row in acquisition_percentage_df.iterrows():
-            fig_acquired_filtered.add_annotation(
-                x=row['x_axisLabel'],
-                y=row['Acquisition %'],
-                text=f"{row['Acquisition %']:.0f}%",
-                showarrow=False,
-                xanchor='left',
-                yanchor='middle',
-                xshift=10,
-                font=dict(color='white', weight='bold')
-            )
+    # Display the plot in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
 
-        st.plotly_chart(fig_acquired_filtered, use_container_width=True)
-    else:
-        st.warning("No data available for newly acquired students based on the selected filters.")
+    # Display total unique dancers enrolled
+    total_unique_dancers = grouped_unique_enrollment_df['Number of Unique Dancers'].sum()
+    st.markdown(
+        f"<h5 style='text-align: left; margin-left: 75px;'>Total Unique Students: {int(total_unique_dancers)}</h5>",
+        unsafe_allow_html=True
+    )
+# RETENTION
+    # Merge the unique enrollment and acquisition DataFrames on 'x_axisLabel' and 'groupbyVar'
+    retention_df = unique_enrollment_df.merge(new_students_df, on=['x_axisLabel', groupbyVar, 'Sort_Key'], how='left')
 
-    if 'acquired_grouped_filtered_df' in globals() and not acquired_grouped_filtered_df.empty:
-        # Calculate total acquired students
-        total_acquired_students = acquired_grouped_filtered_df['Newly Acquired Students'].sum()
-    else:
-        total_acquired_students = 0
+    # Calculate Retained Dancers as the difference between Total Unique Dancers and Newly Acquired Students
+    retention_df['Retained Students'] = retention_df['Number of Unique Dancers'] - retention_df['Number of New Students']
 
-    # Calculate the Acquisition Ratio
-    #if total_dancers > 0:
-        #acquisition_ratio = (total_acquired_students / total_dancers) * 100
-    #else:
-        #acquisition_ratio = 0
+    # Calculate retention as a percentage
+    retention_df['Retention %'] = (retention_df['Retained Students'] / retention_df['Number of Unique Dancers']) * 100
 
-    # Display the total acquired students and Acquisition Ratio side by side
-    #col1, col2 = st.columns([1, 4])
-    #with col1:
-    st.markdown(f"<h5 style='text-align: left; margin-left: 75px;'>Total Acquisition: {total_acquired_students}</h5>", unsafe_allow_html=True)
-    #with col2:
-        #st.markdown(f"<h5 style='text-align: left; margin-left: 0px;'>Acquisition Ratio: {acquisition_ratio:.2f}%</h5>", unsafe_allow_html=True)
+    # Sort the DataFrame based on Sort_Key for proper session ordering
+    retention_df = retention_df.sort_values('Sort_Key')
 
-    st.markdown("<h5 style='text-align: left;'>Retention Percentage</h5>", unsafe_allow_html=True)
+    # Plotting Retention Percentage Graph
+    fig_retention = px.line(
+        retention_df,
+        x='x_axisLabel',
+        y='Retention %',
+        color=groupbyVar,  # Differentiate lines by groupbyVar
+        markers=True,
+        title='Retention Percentage'
+    )
 
-    if not filtered_df.empty:
-        # Merge the unique enrollment and acquisition DataFrames on 'x_axisLabel'
-        retention_df = unique_enrollment_df.merge(acquired_grouped_filtered_df, on=['x_axisLabel', groupbyVar], how='left')
-        
-        # Calculate Retained Dancers as the difference between Total Unique Dancers and Newly Acquired Students
-        retention_df['Newly Acquired Students'] = retention_df['Newly Acquired Students'].fillna(0)
-        retention_df['Retained Dancers'] = retention_df['Number of Unique Dancers'] - retention_df['Newly Acquired Students']
-        
-        # Calculate retention as a percentage
-        retention_df['Retention %'] = (retention_df['Retained Dancers'] / retention_df['Number of Unique Dancers']) * 100
-        
-        # Sort the DataFrame based on Sort_Key for proper session ordering
-        retention_df = retention_df.merge(df[['x_axisLabel', 'Sort_Key']].drop_duplicates(), on='x_axisLabel')
-        retention_df = retention_df.sort_values('Sort_Key')
+    fig_retention.update_traces(
+        connectgaps=True,
+        marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
+        line=dict(width=3)
+    )
 
-        # Plotting Retention Percentage Graph
-        fig_retention = px.line(retention_df, x='x_axisLabel', y='Retention %', color = groupbyVar, markers=True, 
-                                title='Retention Percentage')
-        
-        fig_retention.update_traces(marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
-                                    line=dict(width=3))
+    fig_retention.update_layout(
+        xaxis_title="Time Period",
+        yaxis_title="Retention Percentage",
+        xaxis_tickangle=-45,
+        template='plotly_white',
+        font=dict(size=14, color='black'),
+        title_font=dict(size=24, color='white'),
+        title_x=0.42,
+        xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        plot_bgcolor='rgba(0,0,0,0)',
+        hovermode='x unified'
+    )
 
-        fig_retention.update_layout(
-            xaxis_title="Time Period",
-            yaxis_title="Retention Percentage",
-            xaxis_tickangle=-45,
-            template='plotly_white',
-            font=dict(size=14, color='black'),
-            title_font=dict(size=24, color='white'),
-            title_x=0.4,
-            xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            plot_bgcolor='rgba(0,0,0,0)',
-            hovermode='x unified'
+    # Add annotations for each point in the graph
+    for _, row in retention_df.iterrows():
+        fig_retention.add_annotation(
+            x=row['x_axisLabel'],
+            y=row['Retention %'],
+            text=f"{row['Retention %']:.0f}% ({int(row['Retained Students']) if not pd.isna(row['Retained Students']) else 'N/A'})",
+            showarrow=False,
+            xanchor='left',
+            yanchor='middle',
+            xshift=10,
+            font=dict(color='white', weight='bold')
         )
 
-        # Add annotations for each point in the graph
-        for _, row in retention_df.iterrows():
-            fig_retention.add_annotation(
-                x=row['x_axisLabel'],
-                y=row['Retention %'],
-                text=f"{row['Retention %']:.0f}%",
-                showarrow=False,
-                xanchor='left',
-                yanchor='middle',
-                xshift=10,
-                font=dict(color='white', weight='bold')
-            )
+    # Display the retention plot in Streamlit
+    st.plotly_chart(fig_retention, use_container_width=True)
 
-        # Display the retention plot in Streamlit
-        st.plotly_chart(fig_retention, use_container_width=True)
+    # Display total retention percentage for all periods combined, if desired
+    total_retained_dancers = retention_df['Retained Students'].sum()
+    overall_retention_percentage = (
+        retention_df['Retained Students'].sum() / retention_df['Number of Unique Dancers'].sum()
+    ) * 100
+    st.markdown(
+        f"<h5 style='text-align: left; margin-left: 75px;'>Percent of Students Retained: {overall_retention_percentage:.0f}%</h5>",
+        unsafe_allow_html=True
+    )
+# DROPS: Unique Students P1 - Retained Students P2
+    st.markdown(
+        f"<h5 style='text-align: left; margin-left: 75px;'>Drops: Unique Students (previous period) - Retained Students (current period)</h5>",
+        unsafe_allow_html=True
+    )
 
-        # Display total retention percentage for all periods combined, if desired
-        total_retained_dancers = retention_df['Retained Dancers'].sum()
-        overall_retention_percentage = (retention_df['Retained Dancers'].sum() / retention_df['Number of Unique Dancers'].sum()) * 100
-        st.markdown(f"<h5 style='text-align: left; margin-left: 75px;'>Overall Retention Percentage: {overall_retention_percentage:.0f}%</h5>", unsafe_allow_html=True)
+    # Merge the unique enrollment and acquisition DataFrames, including groupbyVar
+    drops_df = drops_df.merge(new_students_drops_df, on=['Year_Season_Session', groupbyVar], how='left')
+
+    drops_df['x_axisLabelSession'] = drops_df['Year_Season_Session']
+
+    drops_df = drops_df.merge(
+        df[['x_axisLabelSession', 'Sort_Key_Session']].drop_duplicates(),
+        on='x_axisLabelSession'
+    )
+
+    # Generate a complete grid of all combinations of x_axisLabel and groupbyVar
+    if display_toggle == "School Year":
+        drops_df['x_axisLabel'] = drops_df['School Year String_x']
+        unique_x_axis = drops_df['x_axisLabel'].unique()
     else:
-        st.warning("No data available for the selected filters.")
-    #DROPS SECTION
-    # DROPS - Percentage Change in Retained Dancers from Previous Period for each Teacher
-    if not retention_df.empty:
-        retention_df['Drop %'] = retention_df.groupby(groupbyVar)['Retained Dancers'].pct_change().fillna(0) * 100
+        drops_df['x_axisLabel'] = drops_df['Year_Season_Session']
+        unique_x_axis = drops_df['x_axisLabel'].unique()
 
-        # Plot the Percentage Change in Retained Dancers Graph
-        fig_drop_pct = px.line(retention_df, x='x_axisLabel', y='Drop %', color=groupbyVar, markers=True, 
-                            title='Percentage Change in Retained Dancers')
-        
-        fig_drop_pct.update_traces(marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
-                                line=dict(width=3))
-        
-        fig_drop_pct.update_layout(
-            xaxis_title="Time Period",
-            yaxis_title="Percentage Change in Retained Dancers",
-            xaxis_tickangle=-45,
-            template='plotly_white',
-            font=dict(size=14, color='black'),
-            title_font=dict(size=24, color='white'),
-            title_x=0.31,
-            xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            plot_bgcolor='rgba(0,0,0,0)',
-            hovermode='x unified'
+    unique_groupby_values = drops_df[groupbyVar].unique()
+
+    # Create a DataFrame with all combinations of x_axisLabel and groupbyVar
+    complete_grid = pd.MultiIndex.from_product([unique_x_axis, unique_groupby_values], names=['x_axisLabel', groupbyVar]).to_frame(index=False)
+
+    # Merge the complete grid with drops_df to include missing combinations
+    drops_df = complete_grid.merge(drops_df, on=['x_axisLabel', groupbyVar], how='left')
+
+    # Sort and calculate drops logic
+    drops_df = drops_df.sort_values('Sort_Key_Session')
+
+    # Ensure unique enrollment data is sorted correctly and includes a shifted column for previous period's unique dancers
+    drops_df['Retained Students'] = drops_df['Number of Unique Dancers'] - drops_df['Number of New Students']
+    drops_df['Previous Period Unique Dancers'] = drops_df.groupby(groupbyVar)['Number of Unique Dancers'].shift(1)
+
+    # Calculate Drops as the difference between Previous Period Unique Dancers and current period's Retained Dancers
+    drops_df['Drops'] = drops_df['Previous Period Unique Dancers'] - drops_df['Retained Students']
+
+    if display_toggle == "School Year":
+        # Aggregate data by School Year and groupbyVar
+        drops_df = drops_df.groupby(['x_axisLabel', groupbyVar], as_index=False).agg({
+            'Drops': 'sum',
+        })
+    else:
+        # Use Year_Season_Session for the x-axis
+        drops_df['x_axisLabel'] = drops_df['Year_Season_Session']
+
+    # Calculate the percentage change in drops by groupbyVar
+    drops_df['Drop %'] = drops_df.groupby(groupbyVar)['Drops'].pct_change().fillna(0) * 100
+
+    # Plot the Percentage Change in Drops Graph
+    fig_drop_pct = px.line(
+        drops_df,
+        x='x_axisLabel',
+        y='Drop %',
+        color=groupbyVar,  # Differentiate lines by groupbyVar
+        markers=True,
+        title='Percentage Change in Drops'
+    )
+
+    fig_drop_pct.update_traces(
+        marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
+        line=dict(width=3)
+    )
+
+    fig_drop_pct.update_layout(
+        xaxis_title="Time Period",
+        yaxis_title="Percentage Change in Drops",
+        xaxis_tickangle=-45,
+        template='plotly_white',
+        font=dict(size=14, color='black'),
+        title_font=dict(size=24, color='white'),
+        title_x=0.4,
+        xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        plot_bgcolor='rgba(0,0,0,0)',
+        hovermode='x unified'
+    )
+
+    # Add annotations to each point in the graph to display the percentage change in drops
+    for _, row in drops_df.iterrows():
+        fig_drop_pct.add_annotation(
+            x=row['x_axisLabel'],
+            y=row['Drop %'],
+            text=f"{row['Drop %']:.0f}%",
+            showarrow=False,
+            xanchor='left',
+            yanchor='middle',
+            xshift=10,
+            font=dict(color='white', weight='bold')
         )
 
-        # Add annotations for each point in the graph
-        for _, row in retention_df.iterrows():
-            fig_drop_pct.add_annotation(
-                x=row['x_axisLabel'],
-                y=row['Drop %'],
-                text=f"{row['Drop %']:.0f}%", 
-                showarrow=False,
-                xanchor='left',
-                yanchor='middle',
-                xshift=10,
-                font=dict(color='white', weight='bold')
-            )
+    # Display the percentage change in drops plot in Streamlit
+    st.plotly_chart(fig_drop_pct, use_container_width=True)
 
-        # Display the percentage change in retention plot in Streamlit
-        st.plotly_chart(fig_drop_pct, use_container_width=True)
+    # DROPS: Count
+    # Plot the count of drops
+    fig_drop_diff = px.line(
+        drops_df,
+        x='x_axisLabel',
+        y='Drops',
+        color=groupbyVar,  # Differentiate lines by groupbyVar
+        markers=True,
+        title='Number of Drops'
+    )
 
-        # DROPS - Difference in Retained Dancers from Previous Period for each Teacher
-        retention_df['Drops'] = retention_df.groupby(groupbyVar)['Retained Dancers'].diff().fillna(0)
+    fig_drop_diff.update_traces(
+        marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
+        line=dict(width=3)
+    )
 
-        # Plot the Difference in Retained Dancers Graph
-        fig_drop_diff = px.line(retention_df, x='x_axisLabel', y='Drops', color=groupbyVar, markers=True, 
-                                title='Difference in Retained Dancers')
-        
-        fig_drop_diff.update_traces(marker=dict(size=10, symbol="circle", line=dict(width=1, color='darkslategray')),
-                                    line=dict(width=3))
-        
-        fig_drop_diff.update_layout(
-            xaxis_title="Time Period",
-            yaxis_title="Difference in Retained Dancers",
-            xaxis_tickangle=-45,
-            template='plotly_white',
-            font=dict(size=14, color='black'),
-            title_font=dict(size=24, color='white'),
-            title_x=0.31,
-            xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
-            plot_bgcolor='rgba(0,0,0,0)',
-            hovermode='x unified'
+    fig_drop_diff.update_layout(
+        xaxis_title="Time Period",
+        yaxis_title="Count of Dropped Students",
+        xaxis_tickangle=-45,
+        template='plotly_white',
+        font=dict(size=14, color='black'),
+        title_font=dict(size=24, color='white'),
+        title_x=0.44,
+        xaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        yaxis=dict(showgrid=True, zeroline=False, showline=True, linewidth=2, linecolor='lightgrey'),
+        plot_bgcolor='rgba(0,0,0,0)',
+        hovermode='x unified'
+    )
+
+    # Add annotations for each point in the graph
+    for _, row in drops_df.iterrows():
+        fig_drop_diff.add_annotation(
+            x=row['x_axisLabel'],
+            y=row['Drops'],
+            text=f"{row['Drops']:.0f}",
+            showarrow=False,
+            xanchor='left',
+            yanchor='middle',
+            xshift=10,
+            font=dict(color='white', weight='bold')
         )
 
-        # Add annotations for each point in the graph
-        for _, row in retention_df.iterrows():
-            fig_drop_diff.add_annotation(
-                x=row['x_axisLabel'],
-                y=row['Drops'],
-                text=f"{row['Drops']:.0f}", 
-                showarrow=False,
-                xanchor='left',
-                yanchor='middle',
-                xshift=10,
-                font=dict(color='white', weight='bold')
-            )
+    # Display the difference in retention plot in Streamlit
+    st.plotly_chart(fig_drop_diff, use_container_width=True)
 
-        # Display the difference in retention plot in Streamlit
-        st.plotly_chart(fig_drop_diff, use_container_width=True)
+    # Display total dropped dancers count
+    total_dropped_dancers = drops_df['Drops'].sum()
+    st.markdown(
+        f"<h5 style='text-align: left;'>Total Dropped Students: {total_dropped_dancers:.0f}</h5>",
+        unsafe_allow_html=True
+    )
+# Tab 4: Format Data
+with tab4:
+    def extract_info_from_filename(filename):
+        file_name = os.path.basename(filename)
+        parts = os.path.splitext(file_name)[0].split('_')
+        if len(parts) >= 7:
+            return {
+                "Location": parts[0],
+                "Reg/NonReg": parts[1],
+                "Season": parts[2],
+                "Session": parts[3],
+                "Year": parts[4],
+                "Class": parts[5],
+                "Teacher": parts[6],
+                "Source": file_name 
+            }
+        else:
+            raise ValueError(f"Filename format invalid: {filename}")
 
-        # Display total dropped dancers count for all teachers
-        total_dropped_dancers = retention_df['Drops'].sum()
-        #st.markdown(f"<h5 style='text-align: left;'>Total Retained Dancers Dropped: {total_dropped_dancers:.0f}</h5>", unsafe_allow_html=True)
-    else:
-        st.warning("No data available for the selected filters.")
+    def clean_last_name(last_name):
+        return re.sub(r"\s?\(.*\)", "", last_name)
+
+    def calculate_age(birth_date, year):
+        birth_year = birth_date.year
+        birth_month = birth_date.month
+        birth_day = birth_date.day
+
+        age = year - birth_year
+        if (birth_month > datetime.now().month) or (birth_month == datetime.now().month and birth_day > datetime.now().day):
+            age -= 1
+        return age
+
+    def process_files(file_buffers):
+        consolidated_data = []
+        for file_buffer in file_buffers:
+            try:
+                info = extract_info_from_filename(file_buffer.name)
+
+                session = int(info["Session"]) if info["Session"].isdigit() else None
+                year = int(info["Year"]) if info["Year"].isdigit() else None
+
+                df = pd.read_excel(file_buffer)
+                
+                for index, row in df.iterrows():
+                    cleaned_last_name = clean_last_name(row['Last Name'])
+                    
+                    birth_date = datetime.strptime(row['Birth Date'], '%b %d, %Y')
+                    formatted_birth_date = birth_date.strftime('%m%d%Y')
+                    
+                    if year:
+                        age = calculate_age(birth_date, year)
+                    else:
+                        age = None  
+
+                    consolidated_data.append({
+                        "DancerID": f"{row['First Name']}_{cleaned_last_name}_{formatted_birth_date}",
+                        "FirstName": row['First Name'],
+                        "LastName": cleaned_last_name,
+                        "Phone": row['Phone'],
+                        "Email": row['Email'],
+                        "Address": row['Address'],
+                        "BirthDate": row['Birth Date'],
+                        "Age": age,
+                        "City": None,
+                        "Location": info["Location"],
+                        "Reg/NonReg": info["Reg/NonReg"],
+                        "Season": info["Season"],
+                        "Session": session,
+                        "Year": year,
+                        "Class": info["Class"],
+                        "Teacher": info["Teacher"],
+                        "Source": info["Source"]
+                    })
+            except Exception as e:
+                st.error(f"Error processing file {file_buffer.name}: {e}")
+
+        return pd.DataFrame(consolidated_data)
+
+    def save_to_excel(dataframe):
+        output_path = f"Consolidated_Data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        dataframe.to_excel(output_path, index=False)
+        return output_path
+
+    def format_data_tab():
+        st.title("Data Format Application")
+        st.write("Upload your Excel files to process and format the data.")
+
+        uploaded_files = st.file_uploader("Upload Excel Files", type=['xls', 'xlsx', 'xlsm'], accept_multiple_files=True)
+
+        if st.button("Process Files"):
+            if uploaded_files:
+                consolidated_df = process_files(uploaded_files)
+                if not consolidated_df.empty:
+                    st.success("Files processed successfully!")
+                    st.write(consolidated_df)
+
+                    output_file = save_to_excel(consolidated_df)
+                    with open(output_file, "rb") as file:
+                        st.download_button(
+                            label="Download Consolidated Data",
+                            data=file,
+                            file_name=output_file,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                else:
+                    st.warning("No data was consolidated. Please check your files.")
+            else:
+                st.warning("Please upload at least one file.")
+
+    # Main entry point
+    if __name__ == "__main__":
+        format_data_tab()
