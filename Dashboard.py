@@ -949,6 +949,8 @@ with tab3:
         on='x_axisLabel'
     )
 
+    new_students_retention_df = new_students_df
+
     new_students_df = (
         new_students_df.groupby(['x_axisLabel', groupbyVar, 'Sort_Key'], as_index=False)
         .agg({'Number of New Students': 'sum'})
@@ -1072,12 +1074,14 @@ with tab3:
     )
 # RETENTION
     # Merge the unique enrollment and acquisition DataFrames on 'x_axisLabel' and 'groupbyVar'
-    retention_df = unique_enrollment_df.merge(new_students_df, on=['x_axisLabel', groupbyVar, 'Sort_Key'], how='left')
+    retention_df = unique_enrollment_df.merge(new_students_retention_df, on=['x_axisLabel', groupbyVar, 'Sort_Key'], how='left')
 
     retention_df = (
         retention_df.groupby(['x_axisLabel', groupbyVar, 'Sort_Key'], as_index=False)
         .agg({'Number of New Students': 'sum', 'Number of Unique Dancers': 'sum'})
     )
+
+    retention_df = retention_df.sort_values('Sort_Key')
 
     # Calculate Retained Dancers as the difference between Total Unique Dancers and Newly Acquired Students
     retention_df['Retained Students'] = retention_df['Number of Unique Dancers'] - retention_df['Number of New Students']
