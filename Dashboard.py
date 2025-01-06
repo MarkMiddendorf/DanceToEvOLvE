@@ -870,6 +870,12 @@ with tab3:
     # Calculate total enrollment across all sessions
     total_unique_dancers = unique_enrollment_df['Number of Unique Dancers'].sum()
 
+    # Group by x_axisLabel and groupbyVar
+    grouped_unique_enrollment_df = (
+        unique_enrollment_df.groupby(['x_axisLabel', groupbyVar], as_index=False)
+        .agg({'Number of Unique Dancers': 'sum'})
+    )
+
 # BRAND NEW STUDENTS
     # Sort the DataFrame for consistent processing
     df_sorted = df.sort_values('Year_Season_Session')
@@ -942,13 +948,17 @@ with tab3:
         df[['x_axisLabel', 'Sort_Key']].drop_duplicates(),
         on='x_axisLabel'
     )
-    new_students_df = new_students_df.sort_values('Sort_Key')
+
+    new_students_df = (
+        new_students_df.groupby(['x_axisLabel', groupbyVar, 'Sort_Key'], as_index=False)
+        .agg({'Number of New Students': 'sum'})
+    )
 
     # Calculate total new students
     total_new_students = new_students_df['Number of New Students'].sum()
 
     # Merge to calculate acquisition as a percentage
-    acquisition_percentage_df = new_students_df.merge(unique_enrollment_df, on=['x_axisLabel', groupbyVar])
+    acquisition_percentage_df = new_students_df.merge(grouped_unique_enrollment_df, on=['x_axisLabel', groupbyVar])
     acquisition_percentage_df['Acquisition %'] = (
         acquisition_percentage_df['Number of New Students'] /
         acquisition_percentage_df['Number of Unique Dancers']
@@ -1007,11 +1017,6 @@ with tab3:
         unsafe_allow_html=True
     )
 # UNIQUE STUDENTS GRAPH
-    # Group by x_axisLabel and groupbyVar
-    grouped_unique_enrollment_df = (
-        unique_enrollment_df.groupby(['x_axisLabel', groupbyVar], as_index=False)
-        .agg({'Number of Unique Dancers': 'sum'})
-    )
 
     # Plotting the dynamic graph
     fig = px.line(
@@ -1068,6 +1073,11 @@ with tab3:
 # RETENTION
     # Merge the unique enrollment and acquisition DataFrames on 'x_axisLabel' and 'groupbyVar'
     retention_df = unique_enrollment_df.merge(new_students_df, on=['x_axisLabel', groupbyVar, 'Sort_Key'], how='left')
+
+    retention_df = (
+        retention_df.groupby(['x_axisLabel', groupbyVar, 'Sort_Key'], as_index=False)
+        .agg({'Number of New Students': 'sum', 'Number of Unique Dancers': 'sum'})
+    )
 
     # Calculate Retained Dancers as the difference between Total Unique Dancers and Newly Acquired Students
     retention_df['Retained Students'] = retention_df['Number of Unique Dancers'] - retention_df['Number of New Students']
