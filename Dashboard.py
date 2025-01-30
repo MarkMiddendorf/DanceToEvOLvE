@@ -1321,6 +1321,10 @@ with tab4:
         return re.sub(r"\s?\(.*\)", "", last_name)
 
     def calculate_age(birth_date, year):
+        # If birth_date is None, use January 1, 2000 as the default birth date
+        if birth_date is None:
+            birth_date = datetime(2000, 1, 1)
+        
         birth_year = birth_date.year
         birth_month = birth_date.month
         birth_day = birth_date.day
