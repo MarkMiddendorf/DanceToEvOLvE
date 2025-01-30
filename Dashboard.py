@@ -1369,7 +1369,7 @@ with tab4:
                         "Phone": row['Phone'],
                         "Email": row['Email'],
                         "Address": row['Address'],
-                        "BirthDate": row['Birth Date'],
+                        "BirthDate": formatted_birth_date,
                         "Age": age,
                         "City": None,
                         "Location": info["Location"],
