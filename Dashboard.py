@@ -1320,11 +1320,7 @@ with tab4:
     def clean_last_name(last_name):
         return re.sub(r"\s?\(.*\)", "", last_name)
 
-    def calculate_age(birth_date, year):
-        # If birth_date is None, use January 1, 2000 as the default birth date
-        if birth_date is None:
-            birth_date = datetime(2000, 1, 1)
-        
+        def calculate_age(birth_date, year):
         birth_year = birth_date.year
         birth_month = birth_date.month
         birth_day = birth_date.day
@@ -1348,13 +1344,21 @@ with tab4:
                 for index, row in df.iterrows():
                     cleaned_last_name = clean_last_name(row['Last Name'])
                     
-                    birth_date = datetime.strptime(row['Birth Date'], '%b %d, %Y')
+                    # Attempt to convert birth_date, with error handling
+                    try:
+                        birth_date = datetime.strptime(row['Birth Date'], '%b %d, %Y')
+                    except (ValueError, TypeError) as e:
+                        # If the date is invalid or None, set to default value (Jan 1, 2000)
+                        birth_date = datetime(2000, 1, 1)
+                        print(f"Error parsing date for {row['Last Name']} at index {index}: {e}")
+                    
                     formatted_birth_date = birth_date.strftime('%m%d%Y')
                     
+                    # Calculate age based on year, or default to None if no year is provided
                     if year:
                         age = calculate_age(birth_date, year)
                     else:
-                        age = None  
+                        age = None 
 
                     consolidated_data.append({
                         "DancerID": f"{row['First Name']}_{cleaned_last_name}_{formatted_birth_date}",
