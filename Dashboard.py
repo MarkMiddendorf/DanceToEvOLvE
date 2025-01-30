@@ -157,8 +157,6 @@ with tab1:
     # Sort the DataFrame
     df = df.sort_values('Sort_Key')
 
-    st.write(df)
-
     # School Year, Season, and Session filters
     col_school_year, col_season, col_session = st.columns(3)
 
