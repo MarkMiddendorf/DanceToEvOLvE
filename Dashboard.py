@@ -157,6 +157,8 @@ with tab1:
     # Sort the DataFrame
     df = df.sort_values('Sort_Key')
 
+    st.write(df)
+
     # School Year, Season, and Session filters
     col_school_year, col_season, col_session = st.columns(3)
 
@@ -1320,7 +1322,7 @@ with tab4:
     def clean_last_name(last_name):
         return re.sub(r"\s?\(.*\)", "", last_name)
 
-        def calculate_age(birth_date, year):
+    def calculate_age(birth_date, year):
         birth_year = birth_date.year
         birth_month = birth_date.month
         birth_day = birth_date.day
