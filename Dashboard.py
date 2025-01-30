@@ -1354,7 +1354,7 @@ with tab4:
                         birth_date = datetime(2000, 1, 1)
                         print(f"Error parsing date for {row['Last Name']} at index {index}: {e}")
                     
-                    formatted_birth_date = birth_date.strftime('%m%d%Y')
+                    formatted_birth_date = birth_date.strftime('%b %d, %Y')
                     
                     # Calculate age based on year, or default to None if no year is provided
                     if year:
