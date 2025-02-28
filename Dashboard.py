@@ -173,7 +173,7 @@ with tab1:
     st.markdown("<h5 style='text-align: left;'>Additional Filters</h5>", unsafe_allow_html=True)
 
     # Filters formatting
-    col_city, col_class, col_location, col_teacher, col_reg_nonreg = st.columns(5)
+    col_city, col_class, col_location, col_teacher, col_reg_nonreg, col_schedule = st.columns(6)
 
     with col_city:
         selected_cities = select_all_option_expander('City', df['City'].unique(), sort_order='alphabetical')
@@ -197,6 +197,9 @@ with tab1:
 
     with col_reg_nonreg:
         selected_reg_nonreg = select_all_option_expander('Reg/NonReg', df['Reg/NonReg'].unique(), sort_order='alphabetical')
+             
+    with col_schedule:
+        selected_schedule = select_all_option_expander('Schedule', df['Schedule'].unique(), sort_order='alphabetical')
 
     # Apply filters
     filtered_df = df[(df['Class'].isin(selected_classes)) &
@@ -207,6 +210,7 @@ with tab1:
                     (df['School Year'].isin(selected_school_years)) &
                     (df['Season'].isin(selected_seasons)) &
                     (df['City'].isin(selected_cities)) &
+                    (df['Schedule'].isin(selected_schedule)) &
                     (df['Session'].isin(selected_sessions))]
 
     # Initialize total_dancers
@@ -1303,19 +1307,22 @@ with tab4:
     def extract_info_from_filename(filename):
         file_name = os.path.basename(filename)
         parts = os.path.splitext(file_name)[0].split('_')
-        if len(parts) >= 7:
-            return {
-                "Location": parts[0],
-                "Reg/NonReg": parts[1],
-                "Season": parts[2],
-                "Session": parts[3],
-                "Year": parts[4],
-                "Class": parts[5],
-                "Teacher": parts[6],
-                "Source": file_name 
-            }
-        else:
-            raise ValueError(f"Filename format invalid: {filename}")
+        
+        # Ensure the parts list has at least 7 elements, filling missing values with "N/A"
+        while len(parts) < 8:
+            parts.append("N/A")
+        
+        return {
+            "Location": parts[0],
+            "Reg/NonReg": parts[1],
+            "Season": parts[2],
+            "Session": parts[3],
+            "Year": parts[4],
+            "Class": parts[5],
+            "Teacher": parts[6],
+            "Schedule": parts[7],  # This will be "N/A" if missing
+            "Source": file_name
+        }
 
     def clean_last_name(last_name):
         return re.sub(r"\s?\(.*\)", "", last_name)
