@@ -1384,6 +1384,7 @@ with tab4:
                         "Year": year,
                         "Class": info["Class"],
                         "Teacher": info["Teacher"],
+                        "Schedule": info["Schedule"],
                         "Source": info["Source"]
                     })
             except Exception as e:
