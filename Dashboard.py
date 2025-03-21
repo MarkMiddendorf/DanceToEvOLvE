@@ -1204,6 +1204,7 @@ with tab3:
 
     # Calculate the percentage change in drops by groupbyVar
     drops_df['Drop %'] = drops_df.groupby(groupbyVar)['Drops'].pct_change().fillna(0) * 100
+    st.write(drops_df)
 
     # Plot the Percentage Change in Drops Graph
     fig_drop_pct = px.line(
