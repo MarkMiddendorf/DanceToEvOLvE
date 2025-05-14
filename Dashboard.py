@@ -94,7 +94,7 @@ with tab1:
         school_year_mapping = {}
         school_year_string_mapping = {}
         
-        years = sorted(df['Year'].unique())  # Loop through years
+        years = sorted(df['Year'].dropna().astype(int).unique())
         
         for year_start in years:
             # Define start periods for the current school year
