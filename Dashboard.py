@@ -131,7 +131,7 @@ with tab1:
     # Convert School Year and Session to integers (if they are not strings)
     df['School Year'] = df['School Year'].fillna(0).astype(int)
 
-    df['Session'] = df['Session'].astype(int)
+    df['Session'] = pd.to_numeric(df['Session'], errors='coerce').fillna(0).astype(int)
 
     # Convert Season to string (if needed)
     df['Season'] = df['Season'].astype(str)
