@@ -93,7 +93,8 @@ with tab1:
         # Create a mapping of periods to school years
         school_year_mapping = {}
         school_year_string_mapping = {}
-        
+
+        st.write(df['Year'])
         years = sorted(df['Year'].dropna().astype(int).unique())
         
         for year_start in years:
