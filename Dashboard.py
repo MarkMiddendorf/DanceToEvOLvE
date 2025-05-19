@@ -164,7 +164,7 @@ with tab1:
     col_school_year, col_season, col_session = st.columns(3)
 
     with col_school_year:
-        selected_school_years = st.multiselect('School Year', df['School Year'].unique(), df['School Year'].unique(), format_func=str)
+        selected_school_years = st.multiselect('School Year (Sept - Aug)', df['School Year'].unique(), df['School Year'].unique(), format_func=str)
 
     with col_season:
         selected_seasons = st.multiselect('Season', df['Season'].unique(), df['Season'].unique(), format_func=str)
