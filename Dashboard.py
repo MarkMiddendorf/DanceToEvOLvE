@@ -49,7 +49,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["Dashboard", "Summary Statistics", "Group By",
 with tab1:
 
     # Add Display toggle
-    display_toggle = st.radio("Display", options=["School Year", "Session"], index=0)
+    display_toggle = st.radio("Display", options=["School Year (Sept - Aug)", "Session"], index=0)
 
     # select all for filters
     def select_all_option_expander(label, options, sort_order='alphabetical'):
