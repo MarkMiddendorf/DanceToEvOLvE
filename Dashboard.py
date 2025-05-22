@@ -147,7 +147,7 @@ with tab1:
     df['Year_Season_Session'] = df['School Year String'] + ' ' + df['Season'] + ' ' + df['Session'].astype(str)
 
     # Determine the x-axis label based on the display toggle
-    if display_toggle == "School Year":
+    if display_toggle == "School Year (Sept - Aug)":
         df['x_axisLabel'] = df['School Year String']
         df['Sort_Key'] = df['School Year']  # Sort by the start year of the school year
     else:
