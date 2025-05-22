@@ -272,7 +272,7 @@ with tab1:
 
 
         # Determine x_axisLabel based on toggle
-        if display_toggle == "School Year":
+        if display_toggle == "School Year (Sept - Aug)":
             # Rename 'School Year' to x_axisLabel
             unique_enrollment_df['x_axisLabel'] = unique_enrollment_df['School Year String'].astype(str)
             unique_enrollment_df = unique_enrollment_df.groupby('x_axisLabel').agg({'Number of Unique Dancers': 'sum'}).reset_index()
@@ -326,7 +326,7 @@ with tab1:
         new_students_drops_df = new_students_df
 
         # Determine x_axisLabel based on toggle
-        if display_toggle == "School Year":
+        if display_toggle == "School Year (Sept - Aug)":
             # Rename 'School Year' to x_axisLabel
             new_students_df['x_axisLabel'] = new_students_df['School Year String'].astype(str)
             new_stuents_df = new_students_df.groupby('x_axisLabel').agg({'Number of New Students': 'sum'}).reset_index()
@@ -515,7 +515,7 @@ with tab1:
 
         st.write(drops_df)
 
-        if display_toggle == "School Year":
+        if display_toggle == "School Year (Sept - Aug)":
             # Aggregate data by School Year
             drops_df['x_axisLabel'] = drops_df['School Year String_x']
             drops_df = drops_df.groupby('x_axisLabel', as_index=False).agg({
@@ -850,7 +850,7 @@ with tab3:
     drops_df = unique_enrollment_df
 
     # Generate a complete grid of all combinations of x_axisLabel and groupbyVar
-    if display_toggle == "School Year":
+    if display_toggle == "School Year (Sept - Aug)":
         # Rename 'School Year String' to x_axisLabel
         unique_enrollment_df['x_axisLabel'] = unique_enrollment_df['School Year String'].astype(str)
         unique_x_axis = unique_enrollment_df['x_axisLabel'].unique()
@@ -933,7 +933,7 @@ with tab3:
     new_students_drops_df = new_students_df
 
     # Generate a complete grid of all combinations of x_axisLabel and groupbyVar
-    if display_toggle == "School Year":
+    if display_toggle == "School Year (Sept - Aug)":
         # Rename 'School Year String' to x_axisLabel
         new_students_df['x_axisLabel'] = new_students_df['School Year String'].astype(str)
         unique_x_axis = new_students_df['x_axisLabel'].unique()
@@ -1171,7 +1171,7 @@ with tab3:
     )
 
     # Generate a complete grid of all combinations of x_axisLabel and groupbyVar
-    if display_toggle == "School Year":
+    if display_toggle == "School Year (Sept - Aug)":
         drops_df['x_axisLabel'] = drops_df['School Year String_x']
         unique_x_axis = drops_df['x_axisLabel'].unique()
     else:
@@ -1196,7 +1196,7 @@ with tab3:
     # Calculate Drops as the difference between Previous Period Unique Dancers and current period's Retained Dancers
     drops_df['Drops'] = drops_df['Previous Period Unique Dancers'] - drops_df['Retained Students']
 
-    if display_toggle == "School Year":
+    if display_toggle == "School Year (Sept - Aug)":
         # Aggregate data by School Year and groupbyVar
         drops_df = drops_df.groupby(['x_axisLabel', groupbyVar], as_index=False).agg({
             'Drops': 'sum',
