@@ -193,7 +193,9 @@ with tab1:
 
     with col_teacher:
         selected_teachers = select_all_option_expander('Teacher', df['Teacher'].unique(), sort_order='alphabetical')
-
+    
+    # Ensure 'Age' column is converted to integer
+    df['Age'] = pd.to_numeric(df['Age'], errors='coerce').fillna(0).astype(int)
     with col_age:
         selected_ages = select_all_option_expander('Age', df['Age'].unique(), sort_order='numerical')
         selected_ages = df['Age'].unique()
