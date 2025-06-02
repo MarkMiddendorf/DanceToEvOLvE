@@ -194,8 +194,8 @@ with tab1:
     with col_teacher:
         selected_teachers = select_all_option_expander('Teacher', df['Teacher'].unique(), sort_order='alphabetical')
 
-    #with col_age:
-        #selected_ages = select_all_option_expander('Age', df['Age'].unique(), sort_order='numerical')
+    with col_age:
+        selected_ages = select_all_option_expander('Age', df['Age'].unique(), sort_order='numerical')
         selected_ages = df['Age'].unique()
 
     with col_reg_nonreg:
