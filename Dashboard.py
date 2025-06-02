@@ -176,7 +176,7 @@ with tab1:
     st.markdown("<h5 style='text-align: left;'>Additional Filters</h5>", unsafe_allow_html=True)
 
     # Filters formatting
-    col_city, col_class, col_location, col_teacher, col_reg_nonreg, col_schedule = st.columns(6)
+    col_city, col_class, col_age, col_location, col_teacher, col_reg_nonreg, col_schedule = st.columns(7)
 
     with col_city:
         selected_cities = select_all_option_expander('City', df['City'].unique(), sort_order='alphabetical')
