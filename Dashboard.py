@@ -106,7 +106,7 @@ with tab1:
                 (year_start + 1, 'Winter', 1), (year_start + 1, 'Winter', 2),  # Winter in year_start + 1
                 (year_start + 1, 'Spring', 1), (year_start + 1, 'Spring', 2),  # Spring in year_start + 1
                 (year_start + 1, 'Summer', 1), (year_start + 1, 'Summer', 2),  # Summer in year_start + 1
-                (year_start + 1, 'Camp', 3)  # Camp in year_start + 1
+                (year_start + 1, 'Camp', 3), (year_start + 1, 'Camp', 3) # Camp in year_start + 1
             ]
             
             # Define the school year string in 'YYYY-YYYY' format
