@@ -127,6 +127,10 @@ with tab1:
 
 
     # Add School Year
+    df['Year'] = pd.to_numeric(df['Year'], errors='coerce')
+    df['Session'] = pd.to_numeric(df['Session'], errors='coerce').fillna(0).astype(int)
+    df['Season'] = df['Season'].astype(str).str.title().str.strip()  # Capitalize and remove spaces
+
     df = addSchoolYear(df)
 
     # Convert School Year and Session to integers (if they are not strings)
