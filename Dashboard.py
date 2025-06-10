@@ -129,6 +129,8 @@ with tab1:
     # Add School Year
     df = addSchoolYear(df)
 
+    st.write(df)
+
     # Convert School Year and Session to integers (if they are not strings)
     df['School Year'] = df['School Year'].fillna(0).astype(int)
 
