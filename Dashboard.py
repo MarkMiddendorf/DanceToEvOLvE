@@ -129,8 +129,6 @@ with tab1:
     # Add School Year
     df = addSchoolYear(df)
 
-    st.write(df)
-
     # Convert School Year and Session to integers (if they are not strings)
     df['School Year'] = df['School Year'].fillna(0).astype(int)
 
@@ -223,6 +221,7 @@ with tab1:
 
     # Initialize total_dancers
     total_dancers = 0 
+    st.write(filtered_df)
 
 # STUDENT ENROLLMENT GRAPH
     st.markdown("<h5 style='text-align: left;'></h5>", unsafe_allow_html=True)
