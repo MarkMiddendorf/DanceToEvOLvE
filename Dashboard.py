@@ -87,7 +87,7 @@ with tab1:
         # Fall 1 -> Fall 2 -> Winter 1 -> Winter 2 -> Spring 1 -> Spring 2 -> Summer 1 -> Summer 2
         school_year_order = [
             ('Fall', 1), ('Fall', 2), ('Winter', 1), ('Winter', 2),
-            ('Spring', 1), ('Spring', 2), ('Summer', 1), ('Summer', 2), 
+            ('Spring', 1), ('Spring', 2), ('Summer', 1), ('Summer', 2), ('Camp',3)
         ]
         
         # Create a mapping of periods to school years
@@ -106,6 +106,7 @@ with tab1:
                 (year_start + 1, 'Winter', 1), (year_start + 1, 'Winter', 2),  # Winter in year_start + 1
                 (year_start + 1, 'Spring', 1), (year_start + 1, 'Spring', 2),  # Spring in year_start + 1
                 (year_start + 1, 'Summer', 1), (year_start + 1, 'Summer', 2),  # Summer in year_start + 1
+                (year_start + 1, 'Camp', 3),  # Camp in year_start + 1
             ]
             
             # Define the school year string in 'YYYY-YYYY' format
@@ -137,7 +138,7 @@ with tab1:
     df['Season'] = df['Season'].astype(str)
 
     # Order Seasons
-    season_order = {'Fall': 1, 'Winter': 2, 'Spring': 3, 'Summer': 4}
+    season_order = {'Fall': 1, 'Winter': 2, 'Spring': 3, 'Summer': 4, 'Camp': 5}
     df['Season_Order'] = df['Season'].map(season_order)
 
     # Create a sorting key
